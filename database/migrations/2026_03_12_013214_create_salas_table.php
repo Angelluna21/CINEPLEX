@@ -11,7 +11,7 @@ return new class extends Migration
         Schema::create('salas', function (Blueprint $table) {
             $table->id();
             $table->integer('numero_sala');
-            // Llave foránea que conecta con sucursales
+            // FK a sucursales
             $table->foreignId('sucursal_id')->constrained('sucursales')->onDelete('cascade');
             $table->timestamps();
         });
