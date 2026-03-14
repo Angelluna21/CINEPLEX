@@ -13,10 +13,10 @@ return new class extends Migration
             $table->string('titulo');
             $table->text('sinopsis');
             $table->string('genero');
-            $table->enum('clasificacion', ['A', 'B', 'C']); // Regla de tu documento
+            $table->enum('clasificacion', ['A', 'B', 'C']);
             $table->enum('estatus', ['Estreno', 'Cartelera', 'No disponible']);
             $table->string('imagen_url')->nullable();
-            $table->integer('duracion'); // Minutos
+            $table->integer('duracion'); // Programar en minutos, ejemplo: 120 para 2 horas
             $table->timestamps();
         });
     }

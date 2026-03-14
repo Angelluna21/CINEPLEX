@@ -13,7 +13,7 @@ return new class extends Migration
             $table->foreignId('pelicula_id')->constrained('peliculas')->onDelete('cascade');
             $table->foreignId('sala_id')->constrained('salas')->onDelete('cascade');
             $table->date('fecha');
-            $table->enum('hora', ['16:00', '18:00']); // Horario 24 horas
+            $table->time('hora');
             $table->decimal('precio', 8, 2);
             $table->timestamps();
         });
