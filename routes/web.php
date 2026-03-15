@@ -110,3 +110,8 @@ Route::post('/admin/funciones', function (Illuminate\Http\Request $request) {
     App\Models\Funcion::create($datos);
     return redirect('/admin/funciones')->with('success', '¡Función programada con éxito!');
 });
+
+use App\Http\Controllers\UserController;
+
+// Ruta para todo el CRUD de Usuarios
+Route::resource('usuarios', UserController::class);
