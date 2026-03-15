@@ -10,9 +10,12 @@ return new class extends Migration
     {
         Schema::create('salas', function (Blueprint $table) {
             $table->id();
-            $table->integer('numero_sala');
-            // FK a sucursales
             $table->foreignId('sucursal_id')->constrained('sucursales')->onDelete('cascade');
+            $table->integer('numero'); 
+            $table->string('nombre'); 
+            $table->integer('capacidad');
+            // NUEVO CAMPO DE ESTATUS
+            $table->string('estatus')->default('Disponible'); 
             $table->timestamps();
         });
     }

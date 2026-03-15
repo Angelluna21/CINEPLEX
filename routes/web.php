@@ -7,7 +7,12 @@ use App\Models\Sucursal;
 use App\Models\Funcion;
 use App\Models\Sala;
 use Carbon\Carbon;
+
+// CONTROLADORES IMPORTADOS
 use App\Http\Controllers\PeliculaController;
+use App\Http\Controllers\GenreController;
+use App\Http\Controllers\SalaController; // IMPORTANTE: Esta línea es necesaria para evitar el 404
+use App\Http\Controllers\SucursalController;
 
 // ==========================================
 // VISTAS DEL CLIENTE 
@@ -47,9 +52,21 @@ Route::get('/admin', function () {
     return view('admin.dashboard');
 });
 
+// MÓDULO DE PELÍCULAS
 Route::resource('admin/peliculas', PeliculaController::class)->parameters([
     'peliculas' => 'pelicula'
 ]);
+
+// MÓDULO DE GÉNEROS
+Route::resource('generos', GenreController::class);
+
+// MÓDULO DE SALAS (SIGUIENDO EL CASO DE USO)
+Route::resource('admin/salas', SalaController::class)->parameters([
+    'salas' => 'sala'
+]);
+
+// MÓDULO DE SUCURSALES
+Route::resource('admin/sucursales', SucursalController::class);
 
 // ==========================================
 // MÓDULO DE FUNCIONES
@@ -96,9 +113,3 @@ Route::post('/admin/funciones', function (Request $request) {
     Funcion::create($datos);
     return redirect('/admin/funciones')->with('success', '¡Función programada con éxito!');
 });
-
-use App\Http\Controllers\GenreController;
-
-// Catálogo de Géneros
-Route::resource('generos', GenreController::class);
-

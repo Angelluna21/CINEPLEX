@@ -9,17 +9,12 @@ class Sala extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['numero_sala', 'sucursal_id'];
+    protected $table = 'salas';
 
-    // Sla a sucrsal
+    // Ahora permitimos guardar el nombre, la capacidad y la sucursal
+    protected $fillable = ['numero', 'nombre', 'capacidad', 'sucursal_id', 'estatus'];
     public function sucursal()
     {
-        return $this->belongsTo(Sucursal::class);
-    }
-
-    // Funciones que se proyectan en esta sala
-    public function funciones()
-    {
-        return $this->hasMany(Funcion::class);
+        return $this->belongsTo(Sucursal::class, 'sucursal_id');
     }
 }
