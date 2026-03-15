@@ -4,9 +4,15 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
 use App\Models\Pelicula;
 use App\Models\Sucursal;
+<<<<<<< HEAD
 use App\Models\Funcion;
 use App\Models\Sala;
 use Carbon\Carbon;
+=======
+use App\Http\Controllers\PeliculaController;
+
+
+>>>>>>> bc142e67a12a4bb7ecf5bd93ddf279e1fb4697b1
 
 // ==========================================
 // VISTAS DEL CLIENTE 
@@ -151,6 +157,7 @@ Route::put('/admin/funciones/{id}', function (Request $request, $id) {
         $datos['hora'] = Carbon::parse($datos['hora'])->format('H:i:s');
     }
 
+<<<<<<< HEAD
     // Emplame de funciones
     $conflicto = Funcion::where('sala_id', $datos['sala_id'])
                         ->where('fecha', $datos['fecha'])
@@ -174,3 +181,12 @@ Route::delete('/admin/funciones/{id}', function ($id) {
     $funcion->delete();
     return redirect('/admin/funciones')->with('success', 'La función ha sido cancelada y eliminada de la cartelera.');
 });
+=======
+    App\Models\Funcion::create($datos);
+    return redirect('/admin/funciones')->with('success', '¡Función programada con éxito!');
+});
+
+Route::resource('admin/peliculas', PeliculaController::class)->parameters([
+    'peliculas' => 'pelicula'
+]);
+>>>>>>> bc142e67a12a4bb7ecf5bd93ddf279e1fb4697b1
