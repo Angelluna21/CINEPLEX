@@ -70,7 +70,7 @@ class PeliculaController extends Controller
     {
         $pelicula = Pelicula::findOrFail($id);
 
-        // Validación: verificar si existen funciones programadas 
+        
         if ($pelicula->funciones()->count() > 0) {
             return redirect('/admin/peliculas')->with('error', 'No se puede eliminar la película porque tiene funciones programadas.');
         }
