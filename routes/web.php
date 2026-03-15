@@ -4,8 +4,13 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
 use App\Models\Pelicula;
 use App\Models\Sucursal;
+use App\Models\Funcion;
+use App\Models\Sala;
+use Carbon\Carbon;
 
+// ==========================================
 // VISTAS DEL CLIENTE 
+// ==========================================
 
 Route::get('/', function (Request $request) {
     // Sucursales que se muestran en el menu del filtro
@@ -15,22 +20,27 @@ Route::get('/', function (Request $request) {
     $sucursal_id = $request->query('sucursal');
 
     if ($sucursal_id) {
-        // Funciojn de filtro de cada sucursal
-        $peliculas = Pelicula::whereHas('funciones', function ($query) use ($sucursal_id) {
+        // Filtro de sucursal trayendo funciones ordenadas por fecha y hora
+        $peliculas = Pelicula::whereHas('funciones.sala', function ($q) use ($sucursal_id) {
+            $q->where('sucursal_id', $sucursal_id);
+        })->with(['funciones' => function ($query) use ($sucursal_id) {
             $query->whereHas('sala', function ($q) use ($sucursal_id) {
                 $q->where('sucursal_id', $sucursal_id);
-            });
-        })->get();
+            })->orderBy('fecha')->orderBy('hora');
+        }])->get();
     } else {
-
-        // Funcion de muestra de todas las peliculas SIN FILTRO
-        $peliculas = Pelicula::all();
+        // Muestra de todas las peliculas con sus horarios ordenados
+        $peliculas = Pelicula::with(['funciones' => function ($query) {
+            $query->orderBy('fecha')->orderBy('hora');
+        }])->get();
     }
 
     return view('welcome', compact('peliculas', 'sucursales', 'sucursal_id'));
 });
 
+// ==========================================
 // PANEL ADMINISTRATIVO (EMPLEADOS)
+// ==========================================
 
 Route::get('/admin', function () {
     return view('admin.dashboard');
@@ -52,7 +62,7 @@ Route::post('/admin/peliculas', function (Request $request) {
     return redirect('/admin/peliculas')->with('success', '¡Película registrada con éxito!');
 });
 
-// formulario de Edición
+// Formulario de Edición
 Route::get('/admin/peliculas/{id}/edit', function ($id) {
     $pelicula = Pelicula::findOrFail($id);
     return view('admin.peliculas.edit', compact('pelicula'));
@@ -72,7 +82,9 @@ Route::delete('/admin/peliculas/{id}', function ($id) {
     return redirect('/admin/peliculas')->with('success', 'La película ha sido eliminada del catálogo.');
 });
 
-use App\Models\Funcion;
+// ==========================================
+// MÓDULO DE FUNCIONES
+// ==========================================
 
 // Ruta para ver el catálogo de funciones programadas
 Route::get('/admin/funciones', function () {
@@ -80,33 +92,85 @@ Route::get('/admin/funciones', function () {
     return view('admin.funciones.index', compact('funciones'));
 });
 
-
-// MÓDULO DE FUNCIONES
-
-// Ruta para ver el catálogo de funciones programadas
-Route::get('/admin/funciones', function () {
-    $funciones = App\Models\Funcion::with(['pelicula', 'sala.sucursal'])->get();
-    return view('admin.funciones.index', compact('funciones'));
-});
-
 // Ruta para mostrar el formulario de nueva funcion
 Route::get('/admin/funciones/create', function () {
-    $peliculas = App\Models\Pelicula::where('estatus', '!=', 'No disponible')->get(); 
-    $salas = App\Models\Sala::with('sucursal')->get(); 
+    // REGLA DE NEGOCIO (Pre-condición): Solo películas en Estreno o Cartelera
+    $peliculas = Pelicula::whereIn('estatus', ['Estreno', 'Cartelera'])->get(); 
+    $salas = Sala::with('sucursal')->get(); 
     
     return view('admin.funciones.create', compact('peliculas', 'salas'));
 });
 
-// Ruta para Guardar la Funcion en la base de datos
-
 // Ruta para Guardar la Función en la base de datos
-Route::post('/admin/funciones', function (Illuminate\Http\Request $request) {
+Route::post('/admin/funciones', function (Request $request) {
+    $datos = $request->all();
+
+    // Aseguramos el formato de la hora para MySQL
+    if (isset($datos['hora'])) {
+        $datos['hora'] = Carbon::parse($datos['hora'])->format('H:i:s');
+    }
+
+    // REGLA DE NEGOCIO: Validar Conflicto de horario y sala (Flujo Alterno)
+    $conflicto = Funcion::where('sala_id', $datos['sala_id'])
+                        ->where('fecha', $datos['fecha'])
+                        ->where('hora', $datos['hora'])
+                        ->first();
+
+    if ($conflicto) {
+        // Alerta roja
+        return redirect('/admin/funciones/create')
+               ->with('error', 'Error: La sala ya está ocupada en ese horario. Por favor, elige otra sala u otro horario.')
+               ->withInput();
+    }
+
+    // Caso de exito
+    Funcion::create($datos);
+    return redirect('/admin/funciones')->with('success', '¡Función programada con éxito!');
+});
+
+
+// MÓDULO DE FUNCIONES: RUTAS DE EDICIÓN Y ELIMINACIÓN
+
+
+// Formulario para Editar una Función existente
+Route::get('/admin/funciones/{id}/edit', function ($id) {
+    $funcion = Funcion::findOrFail($id);
+    // REGLA DE NEGOCIO: Solo películas válidas
+    $peliculas = Pelicula::whereIn('estatus', ['Estreno', 'Cartelera'])->get(); 
+    $salas = Sala::with('sucursal')->get(); 
+    
+    return view('admin.funciones.edit', compact('funcion', 'peliculas', 'salas'));
+});
+
+// Actualizar la Función en la base de datos
+Route::put('/admin/funciones/{id}', function (Request $request, $id) {
+    $funcion = Funcion::findOrFail($id);
     $datos = $request->all();
 
     if (isset($datos['hora'])) {
-        $datos['hora'] = \Carbon\Carbon::parse($datos['hora'])->format('H:i:s');
+        $datos['hora'] = Carbon::parse($datos['hora'])->format('H:i:s');
     }
 
-    App\Models\Funcion::create($datos);
-    return redirect('/admin/funciones')->with('success', '¡Función programada con éxito!');
+    // Emplame de funciones
+    $conflicto = Funcion::where('sala_id', $datos['sala_id'])
+                        ->where('fecha', $datos['fecha'])
+                        ->where('hora', $datos['hora'])
+                        ->where('id', '!=', $id) 
+                        ->first();
+
+    if ($conflicto) {
+        return redirect("/admin/funciones/{$id}/edit")
+               ->with('error', 'Error: La sala ya está ocupada en ese horario. Por favor, elige otra sala u otro horario.')
+               ->withInput();
+    }
+
+    $funcion->update($datos);
+    return redirect('/admin/funciones')->with('success', '¡Función actualizada correctamente!');
+});
+
+// Eliminar una Función (Flujo Alterno 3.2.3)
+Route::delete('/admin/funciones/{id}', function ($id) {
+    $funcion = Funcion::findOrFail($id);
+    $funcion->delete();
+    return redirect('/admin/funciones')->with('success', 'La función ha sido cancelada y eliminada de la cartelera.');
 });
