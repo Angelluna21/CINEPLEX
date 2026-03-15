@@ -41,9 +41,11 @@
 <body class="font-roboto flex flex-col min-h-screen">
 
     <header class="w-full bg-cinecard p-4 shadow-md flex justify-between items-center border-b border-gray-800">
-        <h1 class="font-montserrat font-bold text-3xl text-transparent bg-clip-text bg-gradient-to-r from-cinecyan to-cinemagenta">
-            CINEPLEX
-        </h1>
+    <a href="/admin" class="hover:opacity-80 transition duration-300 inline-block m-0 p-0">
+    <h1 class="font-montserrat font-bold text-3xl text-transparent bg-clip-text bg-gradient-to-r from-cinecyan to-cinemagenta">
+        CINEPLEX
+    </h1>
+</a>
         
         <div class="flex items-center gap-4">
             @yield('header-actions')
