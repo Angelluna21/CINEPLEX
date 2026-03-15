@@ -2,114 +2,106 @@
 
 @section('title', 'Catálogo de Películas - Admin')
 
-@section('header-actions')
-<div class="text-white flex items-center gap-4">
-    <span class="font-roboto text-sm text-gray-300">
-        <i class="bi bi-person-circle mr-1"></i> Empleado
-    </span>
-    <a href="/" class="text-red-400 hover:text-red-300 font-roboto text-sm transition flex items-center gap-1">
-        <i class="bi bi-box-arrow-right"></i> Salir
-    </a>
-</div>
-@endsection
-
 @section('sidebar')
 <nav class="flex flex-col gap-2 font-roboto h-full">
-    <a href="/admin" class="flex items-center gap-3 text-gray-400 px-4 py-3 rounded-md hover:bg-gray-800 hover:text-white transition">
+    <a href="/admin" class="flex items-center gap-3 text-gray-400 px-4 py-3 rounded-md hover:bg-gray-800 transition">
         <i class="bi bi-house-door"></i> Inicio
     </a>
+    
     <h3 class="text-gray-500 text-xs font-montserrat mt-6 mb-2 uppercase tracking-wider font-bold">Catálogos</h3>
     <a href="/admin/peliculas" class="flex items-center gap-3 text-white bg-gray-800/50 border border-gray-700 px-4 py-2 rounded transition">
         <i class="bi bi-film text-cinecyan"></i> Películas
     </a>
-    <a href="#" class="flex items-center gap-3 text-gray-400 px-4 py-2 hover:bg-gray-800 hover:text-white rounded transition">
+
+    <a href="/admin/sucursales" class="flex items-center gap-3 text-gray-400 px-4 py-2 rounded transition hover:text-white hover:bg-gray-800/50">
         <i class="bi bi-geo-alt"></i> Sucursales
     </a>
-    <a href="#" class="flex items-center gap-3 text-gray-400 px-4 py-2 hover:bg-gray-800 hover:text-white rounded transition">
-        <i class="bi bi-list-ul"></i> Salas
+    <a href="/admin/salas" class="flex items-center gap-3 text-gray-400 px-4 py-2 rounded transition hover:text-white hover:bg-gray-800/50">
+        <i class="bi bi-door-open"></i> Salas
     </a>
-    <h3 class="text-gray-500 text-xs font-montserrat mt-4 mb-2 uppercase tracking-wider font-bold">Operaciones</h3>
-    <a href="#" class="flex items-center gap-3 text-gray-400 px-4 py-2 hover:bg-gray-800 hover:text-white rounded transition">
-        <i class="bi bi-calendar-date text-cinemagenta"></i> Programar Funciones
+
+    <h3 class="text-gray-500 text-xs font-montserrat mt-6 mb-2 uppercase tracking-wider font-bold">Operaciones</h3>
+    <a href="/admin/funciones" class="flex items-center gap-3 text-gray-400 px-4 py-2 rounded transition hover:text-white hover:bg-gray-800/50">
+        <i class="bi bi-calendar-date"></i> Programar Funciones
     </a>
 </nav>
 @endsection
 
 @section('content')
-<div class="bg-cinecard p-6 md:p-8 rounded-lg shadow-lg border border-gray-800">
+<section class="bg-cinecard p-6 md:p-8 rounded-lg shadow-lg border border-gray-800 max-w-5xl mx-auto">
 
-    <div class="flex justify-between items-center mb-6 border-b border-gray-700 pb-4">
-        <h2 class="text-2xl font-montserrat font-bold text-white">Catálogo de Películas</h2>
-        <a href="/admin/peliculas/create" class="bg-[#4CAF50] hover:bg-green-600 text-white px-4 py-2 rounded flex items-center gap-2 font-roboto transition">
+    <header class="mb-6 border-b border-gray-700 pb-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+            <h2 class="text-2xl font-montserrat font-bold text-white">Catálogo de Películas</h2>
+            <p class="font-roboto text-sm text-gray-400 mt-1">Gestiona las películas disponibles en el sistema.</p>
+        </div>
+        <a href="/admin/peliculas/create" class="bg-[#4CAF50] hover:bg-green-600 text-white px-4 py-2 rounded flex items-center gap-2 font-roboto font-bold transition text-sm">
             <i class="bi bi-plus-circle"></i> Nueva Película
         </a>
-    </div>
+    </header>
+
+    @if(session('success'))
+        <aside role="alert" class="bg-green-500/10 border border-green-500 text-green-500 px-4 py-3 rounded mb-6 flex items-center gap-3 font-roboto">
+            <i class="bi bi-check-circle-fill"></i>
+            <p class="font-bold">{{ session('success') }}</p>
+        </aside>
+    @endif
 
     <div class="overflow-x-auto">
-        <table class="w-full text-left font-roboto text-sm text-gray-300">
-            <thead class="bg-[#0B0F19] text-gray-400 uppercase text-xs">
-                <tr>
-                    <th class="px-4 py-3 rounded-tl-lg">ID</th>
-                    <th class="px-4 py-3">Póster</th>
-                    <th class="px-4 py-3">Título</th>
-                    <th class="px-4 py-3">Género</th>
-                    <th class="px-4 py-3">Clas.</th>
-                    <th class="px-4 py-3">Estatus</th>
-                    <th class="px-4 py-3 text-center rounded-tr-lg">Acciones</th>
+        <table class="w-full text-left border-collapse text-sm font-roboto">
+            <thead>
+                <tr class="bg-gray-800/50 border-b border-gray-700 text-gray-400">
+                    <th class="p-3 font-bold uppercase tracking-wider">ID</th>
+                    <th class="p-3 font-bold uppercase tracking-wider">Póster</th>
+                    <th class="p-3 font-bold uppercase tracking-wider">Título</th>
+                    <th class="p-3 font-bold uppercase tracking-wider">Género</th>
+                    <th class="p-3 font-bold uppercase tracking-wider text-center">Clas.</th>
+                    <th class="p-3 font-bold uppercase tracking-wider">Estatus</th>
+                    <th class="p-3 font-bold uppercase tracking-wider text-center">Acciones</th>
                 </tr>
             </thead>
-            <tbody class="divide-y divide-gray-800">
-                @foreach($peliculas as $pelicula)
-                <tr class="hover:bg-gray-800/50 transition">
-                    
-                    <td class="px-4 py-4">{{ $pelicula->id }}</td>
-                    
-                    <td class="px-4 py-4">
-                        @if($pelicula->imagen_url)
-                        <img src="{{ $pelicula->imagen_url }}" alt="Póster" class="w-10 h-14 object-cover rounded border border-gray-600">
-                        @else
-                        <div class="w-10 h-14 bg-[#0B0F19] flex items-center justify-center rounded border border-gray-700 text-gray-500 font-roboto text-[10px] text-center leading-tight shadow-inner">
-                            Sin<br>Imagen
-                        </div>
-                        @endif
-                    </td>
-                    
-                    <td class="px-4 py-4 font-bold text-white">{{ $pelicula->titulo }}</td>
-                    
-                    <td class="px-4 py-4">{{ $pelicula->genero }}</td>
-                    
-                    <td class="px-4 py-4">
-                        <span class="bg-gray-700 px-2 py-1 rounded text-xs">{{ $pelicula->clasificacion }}</span>
-                    </td>
-                    
-                    <td class="px-4 py-4">
-                        @if($pelicula->estatus == 'Estreno')
-                        <span class="text-cinecyan font-bold"><i class="bi bi-star-fill text-xs mr-1"></i>{{ $pelicula->estatus }}</span>
-                        @else
-                        <span class="text-gray-400">{{ $pelicula->estatus }}</span>
-                        @endif
-                    </td>
-                    
-                    <td class="px-4 py-4 text-center">
-                        <menu class="flex items-center justify-center gap-3 p-0 m-0">
-                            <a href="/admin/peliculas/{{ $pelicula->id }}/edit" class="text-[#FFC107] hover:opacity-80 transition" title="Modificar">
-                                <i class="bi bi-pencil-square text-lg"></i>
-                            </a>
-                            <form action="/admin/peliculas/{{ $pelicula->id }}" method="POST" onsubmit="return confirm('¿Estás seguro de que deseas eliminar esta película? Esta acción no se puede deshacer.');" class="m-0 p-0">
-                                @csrf
-                                @method('DELETE') 
-                                <button type="submit" class="text-[#EB3F35] hover:opacity-80 transition" title="Eliminar">
-                                    <i class="bi bi-trash text-lg"></i>
-                                </button>
-                            </form>
-                        </menu>
-                    </td>
-                    
-                </tr>
-                @endforeach
+            <tbody>
+                @forelse($peliculas as $pelicula)
+                    <tr class="border-b border-gray-700/50 hover:bg-gray-800/30 transition text-gray-200">
+                        <td class="p-3 text-gray-500">{{ $pelicula->id }}</td>
+                        <td class="p-3">
+                            <div class="w-12 h-16 bg-gray-900 border border-gray-700 rounded flex items-center justify-center text-[10px] text-gray-600 text-center p-1">
+                                Sin Imagen
+                            </div>
+                        </td>
+                        <td class="p-3 font-bold text-white">{{ $pelicula->titulo }}</td>
+                        <td class="p-3">{{ $pelicula->genero }}</td>
+                        <td class="p-3 text-center">
+                            <span class="bg-gray-700 text-gray-300 px-2 py-1 rounded text-xs font-bold">{{ $pelicula->clasificacion }}</span>
+                        </td>
+                        <td class="p-3">
+                            <span class="text-cinecyan flex items-center gap-1">
+                                <i class="bi bi-star-fill text-[10px]"></i> {{ $pelicula->estatus }}
+                            </span>
+                        </td>
+                        <td class="p-3">
+                            <div class="flex justify-center gap-2">
+                                <a href="/admin/peliculas/{{ $pelicula->id }}/edit" class="text-yellow-500 hover:text-yellow-400 transition" title="Editar">
+                                    <i class="bi bi-pencil-square text-lg"></i>
+                                </a>
+                                <form action="/admin/peliculas/{{ $pelicula->id }}" method="POST" onsubmit="return confirm('¿Eliminar esta película?');">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="text-red-500 hover:text-red-400 transition" title="Eliminar">
+                                        <i class="bi bi-trash text-lg"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                @empty
+                    <tr>
+                        <td colspan="7" class="p-6 text-center text-gray-500 italic">No hay películas registradas.</td>
+                    </tr>
+                @endforelse
             </tbody>
         </table>
     </div>
 
-</div>
+</section>
 @endsection

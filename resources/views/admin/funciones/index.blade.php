@@ -4,7 +4,15 @@
 
 @section('sidebar')
 <nav class="flex flex-col gap-2 font-roboto h-full">
-    <a href="/admin" class="flex items-center gap-3 text-gray-400 px-4 py-3 rounded-md hover:bg-gray-800 transition"><i class="bi bi-house-door"></i> Inicio</a>
+    <a href="/admin" class="flex items-center gap-3 text-gray-400 px-4 py-3 rounded-md hover:bg-gray-800 transition">
+        <i class="bi bi-house-door"></i> Inicio
+    </a>
+    
+    <h3 class="text-gray-500 text-xs font-montserrat mt-6 mb-2 uppercase tracking-wider font-bold">Catálogos</h3>
+    <a href="/admin/peliculas" class="flex items-center gap-3 text-gray-400 px-4 py-2 rounded transition hover:text-white hover:bg-gray-800/50">
+        <i class="bi bi-film"></i> Películas
+    </a>
+
     <h3 class="text-gray-500 text-xs font-montserrat mt-6 mb-2 uppercase tracking-wider font-bold">Operaciones</h3>
     <a href="/admin/funciones" class="flex items-center gap-3 text-white bg-gray-800/50 border border-gray-700 px-4 py-2 rounded transition">
         <i class="bi bi-calendar-date text-cinemagenta"></i> Programar Funciones
