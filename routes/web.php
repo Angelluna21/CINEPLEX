@@ -4,15 +4,10 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
 use App\Models\Pelicula;
 use App\Models\Sucursal;
-<<<<<<< HEAD
 use App\Models\Funcion;
 use App\Models\Sala;
 use Carbon\Carbon;
-=======
 use App\Http\Controllers\PeliculaController;
-
-
->>>>>>> bc142e67a12a4bb7ecf5bd93ddf279e1fb4697b1
 
 // ==========================================
 // VISTAS DEL CLIENTE 
@@ -52,41 +47,9 @@ Route::get('/admin', function () {
     return view('admin.dashboard');
 });
 
-Route::get('/admin/peliculas', function () {
-    $peliculas = Pelicula::all();
-    return view('admin.peliculas.index', compact('peliculas'));
-});
-
-// Crear una nueva película
-Route::get('/admin/peliculas/create', function () {
-    return view('admin.peliculas.create');
-});
-
-// Guardar una nueva película
-Route::post('/admin/peliculas', function (Request $request) {
-    Pelicula::create($request->all());
-    return redirect('/admin/peliculas')->with('success', '¡Película registrada con éxito!');
-});
-
-// Formulario de Edición
-Route::get('/admin/peliculas/{id}/edit', function ($id) {
-    $pelicula = Pelicula::findOrFail($id);
-    return view('admin.peliculas.edit', compact('pelicula'));
-});
-
-// Actualizar
-Route::put('/admin/peliculas/{id}', function (Request $request, $id) {
-    $pelicula = Pelicula::findOrFail($id);
-    $pelicula->update($request->all());
-    return redirect('/admin/peliculas')->with('success', '¡Película actualizada correctamente!');
-});
-
-// Eliminar películas
-Route::delete('/admin/peliculas/{id}', function ($id) {
-    $pelicula = Pelicula::findOrFail($id);
-    $pelicula->delete();
-    return redirect('/admin/peliculas')->with('success', 'La película ha sido eliminada del catálogo.');
-});
+Route::resource('admin/peliculas', PeliculaController::class)->parameters([
+    'peliculas' => 'pelicula'
+]);
 
 // ==========================================
 // MÓDULO DE FUNCIONES
@@ -134,21 +97,16 @@ Route::post('/admin/funciones', function (Request $request) {
     return redirect('/admin/funciones')->with('success', '¡Función programada con éxito!');
 });
 
-
-// MÓDULO DE FUNCIONES: RUTAS DE EDICIÓN Y ELIMINACIÓN
-
-
-// Formulario para Editar una Función existente
+// Ruta para mostrar el formulario de edición de funcion
 Route::get('/admin/funciones/{id}/edit', function ($id) {
     $funcion = Funcion::findOrFail($id);
-    // REGLA DE NEGOCIO: Solo películas válidas
     $peliculas = Pelicula::whereIn('estatus', ['Estreno', 'Cartelera'])->get(); 
     $salas = Sala::with('sucursal')->get(); 
     
     return view('admin.funciones.edit', compact('funcion', 'peliculas', 'salas'));
 });
 
-// Actualizar la Función en la base de datos
+// Ruta para Actualizar la Función en la base de datos
 Route::put('/admin/funciones/{id}', function (Request $request, $id) {
     $funcion = Funcion::findOrFail($id);
     $datos = $request->all();
@@ -157,12 +115,11 @@ Route::put('/admin/funciones/{id}', function (Request $request, $id) {
         $datos['hora'] = Carbon::parse($datos['hora'])->format('H:i:s');
     }
 
-<<<<<<< HEAD
-    // Emplame de funciones
+    // Validar Conflicto de horario y sala (excluyendo la función actual que estamos editando)
     $conflicto = Funcion::where('sala_id', $datos['sala_id'])
                         ->where('fecha', $datos['fecha'])
                         ->where('hora', $datos['hora'])
-                        ->where('id', '!=', $id) 
+                        ->where('id', '!=', $id)
                         ->first();
 
     if ($conflicto) {
@@ -172,21 +129,12 @@ Route::put('/admin/funciones/{id}', function (Request $request, $id) {
     }
 
     $funcion->update($datos);
-    return redirect('/admin/funciones')->with('success', '¡Función actualizada correctamente!');
+    return redirect('/admin/funciones')->with('success', '¡Función actualizada con éxito!');
 });
 
-// Eliminar una Función (Flujo Alterno 3.2.3)
+// Ruta para Eliminar la Función
 Route::delete('/admin/funciones/{id}', function ($id) {
     $funcion = Funcion::findOrFail($id);
     $funcion->delete();
-    return redirect('/admin/funciones')->with('success', 'La función ha sido cancelada y eliminada de la cartelera.');
+    return redirect('/admin/funciones')->with('success', 'La función ha sido cancelada y eliminada.');
 });
-=======
-    App\Models\Funcion::create($datos);
-    return redirect('/admin/funciones')->with('success', '¡Función programada con éxito!');
-});
-
-Route::resource('admin/peliculas', PeliculaController::class)->parameters([
-    'peliculas' => 'pelicula'
-]);
->>>>>>> bc142e67a12a4bb7ecf5bd93ddf279e1fb4697b1
