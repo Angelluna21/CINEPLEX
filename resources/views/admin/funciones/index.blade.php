@@ -1,91 +1,106 @@
 @extends('layouts.app')
 
-@section('title', 'Funciones Programadas - Admin')
-
-@section('sidebar')
-<nav class="flex flex-col gap-2 font-roboto h-full">
-    <a href="/admin" class="flex items-center gap-3 text-gray-400 px-4 py-3 rounded-md hover:bg-gray-800 transition">
-        <i class="bi bi-house-door"></i> Inicio
-    </a>
-    
-    <h3 class="text-gray-500 text-xs font-montserrat mt-6 mb-2 uppercase tracking-wider font-bold">Catálogos</h3>
-    <a href="/admin/peliculas" class="flex items-center gap-3 text-gray-400 px-4 py-2 rounded transition hover:text-white hover:bg-gray-800/50">
-        <i class="bi bi-film"></i> Películas
-    </a>
-
-    <h3 class="text-gray-500 text-xs font-montserrat mt-6 mb-2 uppercase tracking-wider font-bold">Operaciones</h3>
-    <a href="/admin/funciones" class="flex items-center gap-3 text-white bg-gray-800/50 border border-gray-700 px-4 py-2 rounded transition">
-        <i class="bi bi-calendar-date text-cinemagenta"></i> Programar Funciones
-    </a>
-</nav>
-@endsection
-
 @section('content')
-<section class="bg-cinecard p-6 md:p-8 rounded-lg shadow-lg border border-gray-800 max-w-5xl mx-auto">
-
-    <header class="mb-6 border-b border-gray-700 pb-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-            <h2 class="text-2xl font-montserrat font-bold text-white">Funciones Programadas</h2>
-            <p class="font-roboto text-sm text-gray-400 mt-1">Administra la cartelera de todas las sucursales.</p>
+<div class="container mx-auto px-4 sm:px-8 max-w-7xl mt-8">
+    <div class="py-8">
+        <div class="flex flex-col md:flex-row mb-6 justify-between items-center w-full gap-4">
+            <h2 class="text-2xl leading-tight font-bold text-gray-800">
+                Cartelera (Funciones Programadas)
+            </h2>
+            <a href="{{ route('funciones.create') }}" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg shadow-md transition duration-200 whitespace-nowrap">
+                + Nueva Función
+            </a>
         </div>
-        <a href="/admin/funciones/create" class="bg-[#4CAF50] hover:bg-green-600 text-white px-4 py-2 rounded flex items-center gap-2 font-roboto font-bold transition text-sm">
-            <i class="bi bi-plus-lg"></i> Nueva Función
-        </a>
-    </header>
+        
+        @if(session('success'))
+            <div class="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 mb-6 rounded-md shadow-sm">
+                <p class="font-bold">¡Éxito!</p>
+                <p>{{ session('success') }}</p>
+            </div>
+        @endif
 
-    @if(session('success'))
-        <aside role="alert" class="bg-green-500/10 border border-green-500 text-green-500 px-4 py-3 rounded mb-6 flex items-center gap-3 font-roboto animate-fade-in-down">
-            <i class="bi bi-check-circle-fill text-xl"></i>
-            <p class="font-bold">{{ session('success') }}</p>
-        </aside>
-    @endif
+        <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-200 mb-6">
+            <form action="{{ route('funciones.index') }}" method="GET" class="flex flex-col md:flex-row gap-4 items-end">
+                
+                <div class="flex-1 w-full">
+                    <label class="block text-sm font-bold text-gray-700 mb-1">Buscar Película</label>
+                    <input type="text" name="pelicula" value="{{ request('pelicula') }}" placeholder="Ej. Avengers..." 
+                           class="w-full border border-gray-300 rounded-md py-2 px-3 text-black bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
 
-    <div class="overflow-x-auto">
-        <table class="w-full text-left border-collapse text-sm font-roboto">
-            <thead>
-                <tr class="bg-gray-800/50 border-b border-gray-700 text-gray-400">
-                    <th class="p-3 font-bold">Película</th>
-                    <th class="p-3 font-bold">Sucursal y Sala</th>
-                    <th class="p-3 font-bold">Fecha</th>
-                    <th class="p-3 font-bold">Hora</th>
-                    <th class="p-3 font-bold">Precio</th>
-                    <th class="p-3 font-bold text-center">Acciones</th>
-                </tr>
-            </thead>
-            <tbody>
-                @forelse($funciones as $funcion)
-                    <tr class="border-b border-gray-700/50 hover:bg-gray-800/30 transition text-gray-200">
-                        <td class="p-3">{{ $funcion->pelicula->titulo }}</td>
-                        <td class="p-3">{{ $funcion->sala->sucursal->nombre }} - {{ $funcion->sala->nombre }}</td>
-                        <td class="p-3">{{ \Carbon\Carbon::parse($funcion->fecha)->format('d/m/Y') }}</td>
-                        <td class="p-3">{{ \Carbon\Carbon::parse($funcion->hora)->format('h:i A') }}</td>
-                        <td class="p-3">${{ number_format($funcion->precio, 2) }}</td>
-                        <td class="p-3 flex justify-center gap-2">
-                            
-                            <a href="/admin/funciones/{{ $funcion->id }}/edit" class="bg-cinecyan/10 border border-cinecyan text-cinecyan hover:bg-cinecyan hover:text-white px-3 py-1 rounded transition" title="Modificar">
-                                <i class="bi bi-pencil-square"></i>
-                            </a>
+                <div class="w-full md:w-48">
+                    <label class="block text-sm font-bold text-gray-700 mb-1">Fecha de Función</label>
+                    <input type="date" name="fecha" value="{{ request('fecha') }}" 
+                           min="{{ now()->format('Y-m-d') }}" 
+                           max="{{ now()->addMonth()->format('Y-m-d') }}"
+                           class="w-full border border-gray-300 rounded-md py-2 px-3 text-black bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
 
-                            <form action="/admin/funciones/{{ $funcion->id }}" method="POST" onsubmit="return confirm('¿Estás seguro de que deseas cancelar y eliminar esta función? Esto la quitará de la cartelera inmediatamente.');">
-                                @csrf 
-                                @method('DELETE')
-                                <button type="submit" class="bg-[#EB3F35]/10 border border-[#EB3F35] text-[#EB3F35] hover:bg-[#EB3F35] hover:text-white px-3 py-1 rounded transition" title="Eliminar">
-                                    <i class="bi bi-trash"></i>
-                                </button>
-                            </form>
+                <div class="flex space-x-2 w-full md:w-auto">
+                    <button type="submit" class="bg-gray-800 hover:bg-gray-900 text-white font-bold py-2 px-6 rounded-md shadow-sm transition w-full md:w-auto">
+                        Filtrar
+                    </button>
+                    @if(request('pelicula') || request('fecha'))
+                        <a href="{{ route('funciones.index') }}" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded-md shadow-sm transition text-center w-full md:w-auto">
+                            Limpiar
+                        </a>
+                    @endif
+                </div>
+            </form>
+        </div>
 
-                        </td>
-                    </tr>
-                @empty
-                    <tr>
-                        <td colspan="6" class="p-6 text-center text-gray-500 italic">
-                            No hay funciones programadas actualmente. ¡Haz clic en "Nueva Función" para comenzar!
-                        </td>
-                    </tr>
-                @endforelse
-            </tbody>
-        </table>
+        <div class="-mx-4 sm:-mx-8 px-4 sm:px-8 py-4 overflow-x-auto">
+            <div class="inline-block min-w-full shadow-lg rounded-lg overflow-hidden border border-gray-200">
+                <table class="min-w-full leading-normal">
+                    <thead>
+                        <tr>
+                            <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-800 text-left text-xs font-bold text-white uppercase tracking-wider">Fecha y Hora</th>
+                            <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-800 text-left text-xs font-bold text-white uppercase tracking-wider">Película</th>
+                            <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-800 text-left text-xs font-bold text-white uppercase tracking-wider">Ubicación</th>
+                            <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-800 text-left text-xs font-bold text-white uppercase tracking-wider">Precio</th>
+                            <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-800 text-center text-xs font-bold text-white uppercase tracking-wider">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($funciones as $funcion)
+                            <tr class="hover:bg-gray-50 transition duration-150">
+                                <td class="px-5 py-4 border-b border-gray-200 bg-white text-sm">
+                                    <p class="text-gray-900 font-bold whitespace-no-wrap">{{ \Carbon\Carbon::parse($funcion->fecha)->format('d/m/Y') }}</p>
+                                    <p class="text-gray-500 whitespace-no-wrap">{{ \Carbon\Carbon::parse($funcion->hora)->format('h:i A') }}</p>
+                                </td>
+                                <td class="px-5 py-4 border-b border-gray-200 bg-white text-sm">
+                                    <p class="text-gray-900 font-bold whitespace-no-wrap">{{ $funcion->pelicula->titulo }}</p>
+                                </td>
+                                <td class="px-5 py-4 border-b border-gray-200 bg-white text-sm">
+                                    <p class="text-gray-900 font-medium whitespace-no-wrap">{{ $funcion->sala->sucursal->nombre }}</p>
+                                    <p class="text-gray-500 text-xs whitespace-no-wrap">Sala {{ $funcion->sala->numero }} ({{ $funcion->sala->nombre }})</p>
+                                </td>
+                                <td class="px-5 py-4 border-b border-gray-200 bg-white text-sm">
+                                    <span class="px-3 py-1 bg-green-100 text-green-800 rounded-full text-xs font-bold border border-green-300 shadow-sm">
+                                        ${{ number_format($funcion->precio, 2) }}
+                                    </span>
+                                </td>
+                                <td class="px-5 py-4 border-b border-gray-200 bg-white text-sm text-center">
+                                    <div class="flex justify-center space-x-4">
+                                        <a href="{{ route('funciones.edit', $funcion->id) }}" class="text-blue-600 hover:text-blue-900 font-bold transition">Editar</a>
+                                        <form action="{{ route('funciones.destroy', $funcion->id) }}" method="POST" onsubmit="return confirm('¿Seguro que deseas cancelar esta función?');">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="text-red-600 hover:text-red-900 font-bold transition">Cancelar</button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+                @if($funciones->isEmpty())
+                    <div class="px-5 py-10 bg-white text-center">
+                        <p class="text-gray-500 font-medium">No se encontraron funciones programadas con esos criterios.</p>
+                    </div>
+                @endif
+            </div>
+        </div>
     </div>
-
-</section>
+</div>
 @endsection

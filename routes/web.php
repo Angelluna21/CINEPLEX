@@ -4,18 +4,16 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
 use App\Models\Pelicula;
 use App\Models\Sucursal;
-use App\Models\Funcion;
-use App\Models\Sala;
-use Carbon\Carbon;
 
 // CONTROLADORES IMPORTADOS
 use App\Http\Controllers\PeliculaController;
 use App\Http\Controllers\GenreController;
-use App\Http\Controllers\SalaController; // IMPORTANTE: Esta línea es necesaria para evitar el 404
+use App\Http\Controllers\SalaController;
 use App\Http\Controllers\SucursalController;
+use App\Http\Controllers\FuncionController; // NUEVO: Importamos el controlador de Funciones
 
 // ==========================================
-// VISTAS DEL CLIENTE 
+// VISTAS DEL CLIENTE (CARTELERA PÚBLICA)
 // ==========================================
 
 Route::get('/', function (Request $request) {
@@ -60,56 +58,18 @@ Route::resource('admin/peliculas', PeliculaController::class)->parameters([
 // MÓDULO DE GÉNEROS
 Route::resource('generos', GenreController::class);
 
-// MÓDULO DE SALAS (SIGUIENDO EL CASO DE USO)
+// MÓDULO DE SUCURSALES
+Route::resource('admin/sucursales', SucursalController::class);
+
+// MÓDULO DE SALAS
 Route::resource('admin/salas', SalaController::class)->parameters([
     'salas' => 'sala'
 ]);
 
-// MÓDULO DE SUCURSALES
-Route::resource('admin/sucursales', SucursalController::class);
-
 // ==========================================
-// MÓDULO DE FUNCIONES
+// MÓDULO DE FUNCIONES (CARTELERA)
 // ==========================================
-
-// Ruta para ver el catálogo de funciones programadas
-Route::get('/admin/funciones', function () {
-    $funciones = Funcion::with(['pelicula', 'sala.sucursal'])->get();
-    return view('admin.funciones.index', compact('funciones'));
-});
-
-// Ruta para mostrar el formulario de nueva funcion
-Route::get('/admin/funciones/create', function () {
-    // REGLA DE NEGOCIO (Pre-condición): Solo películas en Estreno o Cartelera
-    $peliculas = Pelicula::whereIn('estatus', ['Estreno', 'Cartelera'])->get(); 
-    $salas = Sala::with('sucursal')->get(); 
-    
-    return view('admin.funciones.create', compact('peliculas', 'salas'));
-});
-
-// Ruta para Guardar la Función en la base de datos
-Route::post('/admin/funciones', function (Request $request) {
-    $datos = $request->all();
-
-    // Aseguramos el formato de la hora para MySQL
-    if (isset($datos['hora'])) {
-        $datos['hora'] = Carbon::parse($datos['hora'])->format('H:i:s');
-    }
-
-    // REGLA DE NEGOCIO: Validar Conflicto de horario y sala (Flujo Alterno)
-    $conflicto = Funcion::where('sala_id', $datos['sala_id'])
-                        ->where('fecha', $datos['fecha'])
-                        ->where('hora', $datos['hora'])
-                        ->first();
-
-    if ($conflicto) {
-        // Alerta roja
-        return redirect('/admin/funciones/create')
-               ->with('error', 'Error: La sala ya está ocupada en ese horario. Por favor, elige otra sala u otro horario.')
-               ->withInput();
-    }
-
-    // Caso de exito
-    Funcion::create($datos);
-    return redirect('/admin/funciones')->with('success', '¡Función programada con éxito!');
-});
+// Toda la lógica pesada ahora vive en FuncionController
+Route::resource('admin/funciones', FuncionController::class)->parameters([
+    'funciones' => 'funcion'
+]);
