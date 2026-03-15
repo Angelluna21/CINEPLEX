@@ -96,3 +96,8 @@ Route::post('/admin/funciones', function (Request $request) {
     Funcion::create($datos);
     return redirect('/admin/funciones')->with('success', '¡Función programada con éxito!');
 });
+
+use App\Http\Controllers\GenreController;
+
+// Catálogo de Géneros
+Route::resource('generos', GenreController::class);
