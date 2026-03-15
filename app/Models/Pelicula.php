@@ -10,8 +10,12 @@ class Pelicula extends Model
     use HasFactory;
 
     protected $fillable = [
-        'titulo', 'sinopsis', 'genero', 'clasificacion', 
-        'estatus', 'imagen_url', 'duracion'
+        'titulo', 
+        'genero', 
+        'clasificacion', 
+        'duracion', 
+        'estatus', 
+        'sinopsis'
     ];
 
     // Pelicula a funciones

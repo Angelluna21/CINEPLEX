@@ -1,90 +1,84 @@
 @extends('layouts.app')
 
-@section('title', 'Modificar Película - Admin')
-
-@section('sidebar')
-<nav class="flex flex-col gap-2 font-roboto h-full">
-    <a href="/admin" class="flex items-center gap-3 text-gray-400 px-4 py-3 rounded hover:bg-gray-800 transition"><i class="bi bi-house-door"></i> Inicio</a>
-    <a href="/admin/peliculas" class="flex items-center gap-3 text-white bg-gray-800/50 border border-gray-700 px-4 py-2 rounded transition"><i class="bi bi-film text-cinecyan"></i> Películas</a>
-</nav>
-@endsection
-
 @section('content')
-<section class="bg-cinecard p-6 md:p-8 rounded-lg shadow-lg border border-gray-800 max-w-3xl mx-auto">
+<div class="container mx-auto mt-8 px-4 max-w-2xl">
+    <div class="bg-white shadow-xl rounded-lg overflow-hidden border border-gray-200">
+        <div class="bg-gray-800 px-6 py-4 border-b border-gray-700">
+            <h2 class="text-xl font-bold text-white flex items-center">
+                <svg class="w-5 h-5 mr-2 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                </svg>
+                Editar Película: <span class="ml-2 text-blue-300">{{ $pelicula->titulo }}</span>
+            </h2>
+        </div>
 
-    <header class="mb-6 border-b border-gray-700 pb-4">
-        <h2 class="text-2xl font-montserrat font-bold text-white">Modificar Película</h2>
-        <p class="font-roboto text-sm text-gray-400 mt-1">Actualiza los datos de "{{ $pelicula->titulo }}".</p>
-    </header>
+        <form action="{{ route('peliculas.update', $pelicula->id) }}" method="POST" class="p-6 space-y-6 bg-white">
+            @csrf
+            @method('PUT')
 
-    <form action="/admin/peliculas/{{ $pelicula->id }}" method="POST" class="font-roboto flex flex-col gap-5">
-        @csrf
-        @method('PUT') <fieldset class="border-none p-0 m-0">
-            <label class="flex flex-col gap-2 text-gray-300 text-sm font-bold">
-                Título *
-                <input type="text" id="titulo" name="titulo" value="{{ $pelicula->titulo }}" required
-                    class="bg-[#0B0F19] text-white border border-gray-700 rounded p-2 focus:outline-none focus:border-cinecyan font-normal">
-            </label>
-        </fieldset>
+            <div>
+                <label for="titulo" class="block text-sm font-semibold text-gray-700 mb-1 text-black">Título de la Película</label>
+                <input type="text" name="titulo" id="titulo" value="{{ old('titulo', $pelicula->titulo) }}" 
+                    class="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-black font-medium" required>
+                @error('titulo')
+                    <p class="text-red-600 text-xs mt-1 font-bold">{{ $message }}</p>
+                @enderror
+            </div>
 
-        <fieldset class="border-none p-0 m-0">
-            <label class="flex flex-col gap-2 text-gray-300 text-sm font-bold">
-                Sinopsis *
-                <textarea id="sinopsis" name="sinopsis" rows="4" required
-                    class="bg-[#0B0F19] text-white border border-gray-700 rounded p-2 focus:outline-none focus:border-cinecyan font-normal">{{ $pelicula->sinopsis }}</textarea>
-            </label>
-        </fieldset>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label for="clasificacion" class="block text-sm font-semibold text-gray-700 mb-1 text-black">Clasificación</label>
+                    <select name="clasificacion" id="clasificacion" 
+                        class="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-black font-medium cursor-pointer">
+                        @foreach(['A', 'B', 'B15', 'C', 'D'] as $opcion)
+                            <option value="{{ $opcion }}" {{ old('clasificacion', $pelicula->clasificacion) == $opcion ? 'selected' : '' }}>
+                                {{ $opcion }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
 
-        <fieldset class="grid grid-cols-1 md:grid-cols-2 gap-5 border-none p-0 m-0">
-            <label class="flex flex-col gap-2 text-gray-300 text-sm font-bold">
-                Género *
-                <input type="text" id="genero" name="genero" value="{{ $pelicula->genero }}" required
-                    class="bg-[#0B0F19] text-white border border-gray-700 rounded p-2 focus:outline-none focus:border-cinecyan font-normal">
-            </label>
+                <div>
+                    <label for="duracion" class="block text-sm font-semibold text-gray-700 mb-1 text-black">Duración (minutos)</label>
+                    <input type="number" name="duracion" id="duracion" value="{{ old('duracion', $pelicula->duracion) }}" 
+                        class="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-black font-medium" required>
+                </div>
+            </div>
 
-            <label class="flex flex-col gap-2 text-gray-300 text-sm font-bold">
-                Duración (minutos) *
-                <input type="number" id="duracion" name="duracion" value="{{ $pelicula->duracion }}" required min="1"
-                    class="bg-[#0B0F19] text-white border border-gray-700 rounded p-2 focus:outline-none focus:border-cinecyan font-normal">
-            </label>
-        </fieldset>
+            <div>
+                <label for="sinopsis" class="block text-sm font-semibold text-gray-700 mb-1 text-black">Sinopsis</label>
+                <textarea name="sinopsis" id="sinopsis" rows="4" 
+                    class="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-black leading-relaxed" required>{{ old('sinopsis', $pelicula->sinopsis) }}</textarea>
+                @error('sinopsis')
+                    <p class="text-red-600 text-xs mt-1 font-bold">{{ $message }}</p>
+                @enderror
+            </div>
 
-        <fieldset class="grid grid-cols-1 md:grid-cols-2 gap-5 border-none p-0 m-0">
-            <label class="flex flex-col gap-2 text-gray-300 text-sm font-bold">
-                Clasificación *
-                <select id="clasificacion" name="clasificacion" required class="bg-[#0B0F19] text-white border border-gray-700 rounded p-2 focus:outline-none focus:border-cinecyan font-normal">
-                    <option value="A" {{ $pelicula->clasificacion == 'A' ? 'selected' : '' }}>Clasificación A (Todo público)</option>
-                    <option value="B" {{ $pelicula->clasificacion == 'B' ? 'selected' : '' }}>Clasificación B (12+ años)</option>
-                    <option value="C" {{ $pelicula->clasificacion == 'C' ? 'selected' : '' }}>Clasificación C (Adultos)</option>
-                </select>
-            </label>
+            <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                <label class="block text-sm font-bold text-gray-800 mb-3">Estatus en Cine</label>
+                <div class="flex flex-wrap gap-6">
+                    @foreach(['Estreno', 'Cartelera', 'Próximamente'] as $estado)
+                    <label class="inline-flex items-center group cursor-pointer">
+                        <input type="radio" name="estatus" value="{{ $estado }}" 
+                            class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300" 
+                            {{ old('estatus', $pelicula->estatus) == $estado ? 'checked' : '' }}>
+                        <span class="ml-2 text-sm text-gray-700 group-hover:text-blue-600 transition-colors">{{ $estado }}</span>
+                    </label>
+                    @endforeach
+                </div>
+            </div>
 
-            <label class="flex flex-col gap-2 text-gray-300 text-sm font-bold">
-                Estatus *
-                <select id="estatus" name="estatus" required class="bg-[#0B0F19] text-white border border-gray-700 rounded p-2 focus:outline-none focus:border-cinecyan font-normal">
-                    <option value="Estreno" {{ $pelicula->estatus == 'Estreno' ? 'selected' : '' }}>Estreno</option>
-                    <option value="Cartelera" {{ $pelicula->estatus == 'Cartelera' ? 'selected' : '' }}>Cartelera</option>
-                    <option value="No disponible" {{ $pelicula->estatus == 'No disponible' ? 'selected' : '' }}>No disponible</option>
-                </select>
-            </label>
-        </fieldset>
-
-        <fieldset class="border-none p-0 m-0">
-            <label class="flex flex-col gap-2 text-gray-300 text-sm font-bold">
-                URL del Póster
-                <input type="url" id="imagen_url" name="imagen_url" value="{{ $pelicula->imagen_url }}"
-                    class="bg-[#0B0F19] text-white border border-gray-700 rounded p-2 focus:outline-none focus:border-cinecyan font-normal">
-            </label>
-        </fieldset>
-
-        <footer class="mt-4 flex justify-end gap-3">
-            <a href="/admin/peliculas" class="bg-transparent border border-gray-600 text-gray-300 hover:bg-gray-800 px-4 py-2 rounded transition">
-                Cancelar
-            </a>
-            <button type="submit" class="bg-[#FFC107] hover:bg-yellow-600 text-black px-6 py-2 rounded flex items-center gap-2 font-roboto font-bold transition">
-                <i class="bi bi-pencil-square"></i> Actualizar Película
-            </button>
-        </footer>
-    </form>
-</section>
+            <div class="flex justify-end space-x-4 pt-6 border-t border-gray-100">
+                <a href="{{ route('peliculas.index') }}" 
+                   class="bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 font-bold py-2 px-6 rounded-lg shadow-sm text-sm transition duration-200">
+                    Cancelar
+                </a>
+                <button type="submit" 
+                        class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-8 rounded-lg shadow-lg text-sm transform hover:scale-105 transition duration-200">
+                    Actualizar Cambios
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
 @endsection

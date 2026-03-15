@@ -2,81 +2,66 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Controllers\Controller;
 use App\Models\Pelicula;
+use App\Models\Genre; // Importamos el modelo de Géneros
 use Illuminate\Http\Request;
 
 class PeliculaController extends Controller
 {
-
     public function index()
     {
-        $peliculas = Pelicula::all();
+        $peliculas = Pelicula::all(); 
         return view('admin.peliculas.index', compact('peliculas'));
     }
 
-
     public function create()
     {
-        return view('admin.peliculas.create');
+        // Traemos todos los géneros para el select
+        $generos = Genre::all(); 
+        return view('admin.peliculas.create', compact('generos'));
     }
-
 
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'titulo' => 'required|string|max:255',
-            'sinopsis' => 'required|string',
-            'genero' => 'required|string|max:255',
-            'duracion' => 'required|integer|min:1',
-            'clasificacion' => 'required|in:A,B,C',
-            'estatus' => 'required|in:Estreno,Cartelera,No disponible',
-            'imagen_url' => 'nullable|url',
+        $request->validate([
+            'titulo' => ['required', 'string', 'max:255', 'unique:peliculas'],
+            'genero' => ['required', 'string'], // Validamos el género
+            'clasificacion' => ['required', 'string'],
+            'duracion' => ['required', 'integer', 'min:1'],
+            'estatus' => ['required', 'string'],
+            'sinopsis' => ['required', 'string', 'min:10'],
         ]);
 
-        Pelicula::create($validated);
+        Pelicula::create($request->all());
 
-        return redirect('/admin/peliculas')->with('success', 'Película agregada correctamente.');
+        return redirect()->route('peliculas.index')->with('success', 'Película creada con éxito.');
     }
+    // ... resto de funciones
 
-    public function edit($id)
+
+    public function edit(Pelicula $pelicula)
     {
-        $pelicula = Pelicula::findOrFail($id);
         return view('admin.peliculas.edit', compact('pelicula'));
     }
 
-  
-    public function update(Request $request, $id)
+    public function update(Request $request, Pelicula $pelicula)
+{
+    $request->validate([
+        // Ignora el ID actual para que permita guardar si no cambiaste el título
+        'titulo' => ['required', 'string', 'max:255', 'unique:peliculas,titulo,' . $pelicula->id],
+        'clasificacion' => ['required', 'string'],
+        'duracion' => ['required', 'integer'],
+        'estatus' => ['required', 'string'],
+    ]);
+
+    $pelicula->update($request->all());
+
+    return redirect()->route('peliculas.index')->with('success', 'Película actualizada.');
+}
+
+    public function destroy(Pelicula $pelicula)
     {
-        $pelicula = Pelicula::findOrFail($id);
-
-        $validated = $request->validate([
-            'titulo' => 'required|string|max:255',
-            'sinopsis' => 'required|string',
-            'genero' => 'required|string|max:255',
-            'duracion' => 'required|integer|min:1',
-            'clasificacion' => 'required|in:A,B,C',
-            'estatus' => 'required|in:Estreno,Cartelera,No disponible',
-            'imagen_url' => 'nullable|url',
-        ]);
-
-        $pelicula->update($validated);
-
-        return redirect('/admin/peliculas')->with('success', 'Película actualizada correctamente.');
-    }
-
-  
-    public function destroy($id)
-    {
-        $pelicula = Pelicula::findOrFail($id);
-
-        
-        if ($pelicula->funciones()->count() > 0) {
-            return redirect('/admin/peliculas')->with('error', 'No se puede eliminar la película porque tiene funciones programadas.');
-        }
-
         $pelicula->delete();
-
-        return redirect('/admin/peliculas')->with('success', 'Película eliminada correctamente.');
+        return redirect()->route('peliculas.index')->with('success', 'Película eliminada correctamente.');
     }
 }

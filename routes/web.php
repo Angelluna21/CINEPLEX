@@ -101,3 +101,4 @@ use App\Http\Controllers\GenreController;
 
 // Catálogo de Géneros
 Route::resource('generos', GenreController::class);
+

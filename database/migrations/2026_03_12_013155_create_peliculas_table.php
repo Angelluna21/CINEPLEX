@@ -10,10 +10,10 @@ return new class extends Migration
     {
         Schema::create('peliculas', function (Blueprint $table) {
             $table->id();
-            $table->string('titulo');
+            $table->string('titulo')->unique();
             $table->text('sinopsis');
             $table->string('genero');
-            $table->enum('clasificacion', ['A', 'B', 'C']);
+            $table->enum('clasificacion', ['A', 'B', 'B15', 'C', 'D']);
             $table->enum('estatus', ['Estreno', 'Cartelera', 'No disponible']);
             $table->string('imagen_url')->nullable();
             $table->integer('duracion'); // Programar en minutos, ejemplo: 120 para 2 horas
