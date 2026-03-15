@@ -4,6 +4,9 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
 use App\Models\Pelicula;
 use App\Models\Sucursal;
+use App\Http\Controllers\PeliculaController;
+
+
 
 // VISTAS DEL CLIENTE 
 
@@ -110,3 +113,7 @@ Route::post('/admin/funciones', function (Illuminate\Http\Request $request) {
     App\Models\Funcion::create($datos);
     return redirect('/admin/funciones')->with('success', '¡Función programada con éxito!');
 });
+
+Route::resource('admin/peliculas', PeliculaController::class)->parameters([
+    'peliculas' => 'pelicula'
+]);
