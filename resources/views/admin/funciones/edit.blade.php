@@ -1,108 +1,90 @@
-@extends('layouts.app')
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editar Función - Cineplex</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+</head>
+<body class="bg-[#0B0F19] text-white p-4 md:p-8 font-sans">
 
-@section('title', 'Editar Función - Admin')
+    <div class="max-w-2xl mx-auto mb-6">
+        <a href="{{ route('funciones.index') }}" class="group inline-flex items-center gap-2 bg-gray-800/40 hover:bg-purple-600 text-white px-4 py-2 rounded-xl border border-gray-700 transition-all shadow-lg">
+            <i class="bi bi-arrow-left-circle-fill text-xl transition-transform group-hover:-translate-x-1"></i>
+            <span class="font-bold text-sm uppercase tracking-wider font-sans">Volver a Funciones</span>
+        </a>
+    </div>
 
-@section('sidebar')
-<nav class="flex flex-col gap-2 font-roboto h-full">
-    <a href="/admin" class="flex items-center gap-3 text-gray-400 px-4 py-3 rounded-md hover:bg-gray-800 transition"><i class="bi bi-house-door"></i> Inicio</a>
-    <h3 class="text-gray-500 text-xs font-montserrat mt-6 mb-2 uppercase tracking-wider font-bold">Operaciones</h3>
-    <a href="/admin/funciones" class="flex items-center gap-3 text-white bg-gray-800/50 border border-gray-700 px-4 py-2 rounded transition">
-        <i class="bi bi-calendar-date text-cinemagenta"></i> Programar Funciones
-    </a>
-</nav>
-@endsection
-
-@section('content')
-<section class="bg-cinecard p-6 md:p-8 rounded-lg shadow-lg border border-gray-800 max-w-3xl mx-auto">
-
-    <header class="mb-6 border-b border-gray-700 pb-4">
-        <h2 class="text-2xl font-montserrat font-bold text-white">Editar Función Programada</h2>
-        <p class="font-roboto text-sm text-gray-400 mt-1">Modifica los datos de la proyección.</p>
-    </header>
-
-    @if(session('error'))
-        <aside role="alert" class="bg-[#EB3F35]/10 border border-[#EB3F35] text-[#EB3F35] px-4 py-3 rounded mb-6 flex items-center gap-3 font-roboto animate-fade-in-down">
-            <i class="bi bi-exclamation-triangle-fill text-xl"></i>
-            <p class="font-bold">{{ session('error') }}</p>
-        </aside>
-    @endif
-
-    <form action="/admin/funciones/{{ $funcion->id }}" method="POST" class="font-roboto flex flex-col gap-5">
-        @csrf 
-        @method('PUT')
-
-        <fieldset class="grid grid-cols-1 md:grid-cols-2 gap-5 border-none p-0 m-0">
-            <label class="flex flex-col gap-2 text-gray-300 text-sm font-bold">
-                Película *
-                <select name="pelicula_id" required class="bg-[#0B0F19] text-white border border-gray-700 rounded p-2 focus:outline-none focus:border-cinecyan font-normal cursor-pointer">
-                    @foreach($peliculas as $pelicula)
-                        <option value="{{ $pelicula->id }}" {{ $funcion->pelicula_id == $pelicula->id ? 'selected' : '' }}>
-                            {{ $pelicula->titulo }} ({{ $pelicula->clasificacion }})
-                        </option>
-                    @endforeach
-                </select>
-            </label>
-
-            <label class="flex flex-col gap-2 text-gray-300 text-sm font-bold">
-                Sucursal y Sala *
-                <select name="sala_id" required class="bg-[#0B0F19] text-white border border-gray-700 rounded p-2 focus:outline-none focus:border-cinecyan font-normal cursor-pointer">
-                    @foreach($salas as $sala)
-                        <option value="{{ $sala->id }}" {{ $funcion->sala_id == $sala->id ? 'selected' : '' }}>
-                            {{ $sala->sucursal->nombre }} - {{ $sala->nombre }}
-                        </option>
-                    @endforeach
-                </select>
-            </label>
-        </fieldset>
-
-        <fieldset class="grid grid-cols-1 md:grid-cols-3 gap-5 border-none p-0 m-0">
+    <div class="max-w-2xl mx-auto bg-[#151E2E] p-6 md:p-10 rounded-3xl border border-gray-800 shadow-2xl">
+        <div class="flex items-center justify-between mb-8">
+            <h2 class="text-2xl font-bold text-purple-400 font-sans">Editar Función</h2>
+            <span class="bg-purple-900/30 text-purple-400 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-widest">ID: #{{ $funcion->id }}</span>
+        </div>
+        
+        <form action="{{ route('funciones.update', $funcion->id) }}" method="POST" class="space-y-6">
+            @csrf
+            @method('PUT')
             
-            <label class="flex flex-col gap-2 text-gray-300 text-sm font-bold">
-                Fecha de la Función *
-                <input type="date" name="fecha" required 
-                       min="{{ now()->format('Y-m-d') }}" 
-                       max="{{ now()->addMonth()->format('Y-m-d') }}"
-                       value="{{ $funcion->fecha }}"
-                       class="bg-[#0B0F19] text-white border border-gray-700 rounded p-2 focus:outline-none focus:border-cinecyan font-normal cursor-pointer">
-            </label>
-
-            @php 
-                // Extraemos la hora para poder marcar el radio button correcto
-                $horaExacta = \Carbon\Carbon::parse($funcion->hora)->format('H:i'); 
-            @endphp
-
-            <fieldset class="flex flex-col gap-2 border-none p-0 m-0">
-                <legend class="text-gray-300 text-sm font-bold mb-1">Hora de la Función *</legend>
-                <div class="flex items-center gap-4 bg-[#0B0F19] border border-gray-700 rounded p-2 h-[42px] justify-center">
-                    <label class="flex items-center gap-2 text-white cursor-pointer text-sm font-normal">
-                        <input type="radio" name="hora" value="16:00" required class="accent-cinecyan w-4 h-4 cursor-pointer" {{ $horaExacta == '16:00' ? 'checked' : '' }}>
-                        4:00 PM
-                    </label>
-                    <label class="flex items-center gap-2 text-white cursor-pointer text-sm font-normal">
-                        <input type="radio" name="hora" value="18:00" required class="accent-cinecyan w-4 h-4 cursor-pointer" {{ $horaExacta == '18:00' ? 'checked' : '' }}>
-                        6:00 PM
-                    </label>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label class="block text-gray-400 text-sm mb-2 font-sans">Película</label>
+                    <select name="pelicula_id" required class="w-full bg-[#0B0F19] border border-gray-700 rounded-xl p-3 text-white focus:border-purple-500 outline-none transition-all font-sans">
+                        @foreach($peliculas as $pelicula)
+                            <option value="{{ $pelicula->id }}" {{ $funcion->pelicula_id == $pelicula->id ? 'selected' : '' }}>
+                                {{ $pelicula->titulo }}
+                            </option>
+                        @endforeach
+                    </select>
                 </div>
-            </fieldset>
 
-            <label class="flex flex-col gap-2 text-gray-300 text-sm font-bold">
-                Precio del Boleto ($) *
-                <select name="precio" required class="bg-[#0B0F19] text-white border border-gray-700 rounded p-2 focus:outline-none focus:border-cinecyan font-normal cursor-pointer">
-                    <option value="80.00" {{ $funcion->precio == 80.00 ? 'selected' : '' }}>Sala Tradicional ($80.00)</option>
-                    <option value="105.00" {{ $funcion->precio == 105.00 ? 'selected' : '' }}>Sala 3D ($105.00)</option>
-                    <option value="135.00" {{ $funcion->precio == 135.00 ? 'selected' : '' }}>Sala VIP / MacroXE ($135.00)</option>
-                </select>
-            </label>
-        </fieldset>
+                <div>
+                    <label class="block text-gray-400 text-sm mb-2 font-sans">Sala (Ubicación)</label>
+                    <select name="sala_id" required class="w-full bg-[#0B0F19] border border-gray-700 rounded-xl p-3 text-white focus:border-purple-500 outline-none transition-all font-sans">
+                        @foreach($salas as $sala)
+                            <option value="{{ $sala->id }}" {{ $funcion->sala_id == $sala->id ? 'selected' : '' }}>
+                                {{ $sala->nombre }} - {{ $sala->sucursal->nombre ?? 'Sin Sucursal' }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+            </div>
 
-        <footer class="mt-4 flex justify-end gap-3">
-            <a href="/admin/funciones" class="bg-transparent border border-gray-600 text-gray-300 hover:bg-gray-800 px-4 py-2 rounded transition">
-                Cancelar
-            </a>
-            <button type="submit" class="bg-[#4CAF50] hover:bg-green-600 text-white px-6 py-2 rounded flex items-center gap-2 font-roboto font-bold transition">
-                <i class="bi bi-arrow-repeat"></i> Actualizar Función
-            </button>
-        </footer>
-    </form>
-</section>
-@endsection
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label class="block text-gray-400 text-sm mb-2 font-sans">Fecha Programada</label>
+                    <input type="date" name="fecha" value="{{ $funcion->fecha }}"
+                           min="{{ $minDate }}" 
+                           max="{{ $maxDate }}" 
+                           required 
+                           class="w-full bg-[#0B0F19] border border-gray-700 rounded-xl p-3 text-white focus:border-purple-500 outline-none transition-all font-sans">
+                </div>
+
+                <div>
+                    <label class="block text-gray-400 text-sm mb-2 font-sans">Horario</label>
+                    <select name="hora" required class="w-full bg-[#0B0F19] border border-gray-700 rounded-xl p-3 text-white focus:border-purple-500 outline-none transition-all font-sans">
+                        <option value="16:00" {{ $funcion->hora == '16:00' ? 'selected' : '' }}>04:00 PM</option>
+                        <option value="18:00" {{ $funcion->hora == '18:00' ? 'selected' : '' }}>06:00 PM</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="bg-blue-900/20 border border-blue-800/50 p-4 rounded-xl">
+                <p class="text-blue-400 text-xs font-sans">
+                    <strong class="uppercase">Nota:</strong> El precio se actualizará automáticamente según el tipo de sala seleccionado al guardar los cambios.
+                </p>
+            </div>
+
+            <div class="pt-4 text-center">
+                <button type="submit" class="w-full bg-gradient-to-r from-purple-600 to-pink-600 py-3 rounded-xl font-bold uppercase tracking-widest hover:scale-[1.02] active:scale-95 transition-all shadow-lg shadow-purple-500/20 font-sans">
+                    Guardar Cambios
+                </button>
+                
+                <a href="{{ route('funciones.index') }}" class="inline-block mt-6 text-gray-500 hover:text-white text-sm transition-colors font-sans">
+                    Cancelar
+                </a>
+            </div>
+        </form>
+    </div>
+</body>
+</html>

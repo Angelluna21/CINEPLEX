@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cartelera y Funciones - Cineplex</title>
+    <title>Funciones - Cineplex</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 </head>
@@ -25,14 +25,26 @@
             </div>
         @endif
 
-        <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 mb-8">
+        <div class="flex flex-col lg:flex-row justify-between items-center gap-4 mb-8">
             <div>
-                <h1 class="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-500">Programación de Funciones</h1>
-                <p class="text-gray-400 text-sm mt-1">Asigna películas, horarios y precios a las salas</p>
+                <h1 class="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-500 uppercase tracking-tight">Cartelera</h1>
+                <p class="text-gray-400 text-sm mt-1">Filtrar funciones por película o sala</p>
+            </div>
+
+            <div class="flex w-full md:w-auto gap-2 flex-grow max-w-md">
+                <div class="relative w-full">
+                    <i class="bi bi-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-500"></i>
+                    <input type="text" 
+                           id="searchInput"
+                           placeholder="Buscar película o sala..." 
+                           autocomplete="off"
+                           class="w-full bg-[#0B0F19] border border-gray-700 rounded-full py-2.5 pl-10 pr-4 text-sm focus:border-purple-500 outline-none transition-all">
+                </div>
             </div>
             
-            <a href="{{ route('funciones.create') }}" class="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-pink-600 hover:to-purple-600 text-white px-6 py-2.5 rounded-full font-bold transition-all shadow-lg hover:scale-105 uppercase tracking-wide text-sm">
-                + Nueva Función
+            <a href="{{ route('funciones.create') }}" class="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-pink-600 hover:to-purple-600 text-white px-6 py-2.5 rounded-full font-bold transition-all shadow-lg hover:scale-105 flex items-center gap-2 whitespace-nowrap">
+                <i class="bi bi-plus-circle-fill"></i>
+                Nueva Función
             </a>
         </div>
 
@@ -42,55 +54,53 @@
                     <tr class="bg-gray-900/80 text-gray-400 text-xs uppercase tracking-widest">
                         <th class="p-4">ID</th>
                         <th class="p-4">Película</th>
-                        <th class="p-4">Sala Asignada</th>
+                        <th class="p-4">Sala / Ubicación</th>
                         <th class="p-4">Fecha y Hora</th>
                         <th class="p-4">Precio</th>
                         <th class="p-4 text-center">Acciones</th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody id="tableBody">
                     @forelse($funciones as $funcion)
                     <tr class="border-b border-gray-800 hover:bg-gray-800/30 transition-colors">
                         <td class="p-4 text-gray-500 font-mono text-sm">#{{ $funcion->id }}</td>
                         <td class="p-4 font-bold text-gray-200">
-                            Película ID: {{ $funcion->pelicula_id }}
-                        </td>
-                        <td class="p-4 text-gray-400">
-                            <span class="bg-gray-800 px-3 py-1 rounded-full text-xs border border-gray-700">Sala #{{ $funcion->sala_id }}</span>
+                            {{ $funcion->pelicula->titulo ?? 'Sin título' }}
                         </td>
                         <td class="p-4">
-                            <div class="text-purple-400 font-bold"><i class="bi bi-calendar-event mr-1"></i> {{ $funcion->fecha }}</div>
-                            <div class="text-gray-400 text-sm"><i class="bi bi-clock mr-1"></i> {{ $funcion->hora }}</div>
+                            <div class="flex flex-col">
+                                <span class="text-gray-200 font-semibold sala-nombre">{{ $funcion->sala->nombre ?? 'N/A' }}</span>
+                                <span class="text-[10px] text-gray-500 uppercase italic">
+                                    {{ $funcion->sala->sucursal->nombre ?? 'Sucursal no asignada' }}
+                                </span>
+                            </div>
+                        </td>
+                        <td class="p-4">
+                            <div class="text-purple-400 font-bold text-sm"><i class="bi bi-calendar-event mr-1"></i> {{ date('d/m/Y', strtotime($funcion->fecha)) }}</div>
+                            <div class="text-gray-400 text-xs"><i class="bi bi-clock mr-1"></i> {{ date('h:i A', strtotime($funcion->hora)) }}</div>
                         </td>
                         <td class="p-4 font-black text-green-400">
                             ${{ number_format($funcion->precio, 2) }}
                         </td>
                         <td class="p-4">
                             <div class="flex justify-center items-center gap-4">
-                                
                                 <a href="{{ route('funciones.edit', $funcion->id) }}" class="text-blue-400 hover:text-blue-200 transition-all">
                                     <i class="bi bi-pencil-square text-xl"></i>
                                 </a>
-                                
-                                <a href="javascript:void(0)" 
-                                   onclick="if(confirm('¿Seguro que deseas eliminar esta función de la cartelera?')) { document.getElementById('delete-form-{{ $funcion->id }}').submit(); }" 
-                                   class="text-red-500 hover:text-red-300 transition-all">
-                                    <i class="bi bi-trash3-fill text-xl"></i>
-                                </a>
-
-                                <form id="delete-form-{{ $funcion->id }}" action="{{ route('funciones.destroy', $funcion->id) }}" method="POST" style="display: none;">
+                                <form action="{{ route('funciones.destroy', $funcion->id) }}" method="POST" onsubmit="return confirm('¿Eliminar esta función?');" class="inline">
                                     @csrf
                                     @method('DELETE')
+                                    <button type="submit" class="text-red-500 hover:text-red-300">
+                                        <i class="bi bi-trash3-fill text-xl"></i>
+                                    </button>
                                 </form>
-
                             </div>
                         </td>
                     </tr>
                     @empty
-                    <tr>
-                        <td colspan="6" class="p-16 text-center text-gray-500">
-                            <i class="bi bi-camera-reels text-4xl block mb-2 text-gray-600"></i>
-                            <p class="italic">No hay funciones programadas en la cartelera.</p>
+                    <tr id="noResultsRow">
+                        <td colspan="6" class="p-16 text-center text-gray-500 italic">
+                            No hay funciones programadas.
                         </td>
                     </tr>
                     @endforelse
@@ -98,5 +108,25 @@
             </table>
         </div>
     </div>
+
+    <script>
+        document.getElementById('searchInput').addEventListener('keyup', function() {
+            const searchTerm = this.value.toLowerCase();
+            const rows = document.querySelectorAll('#tableBody tr:not(#noResultsRow)');
+            
+            rows.forEach(row => {
+                // Buscamos en el título de la película (segunda celda) y en el nombre de la sala
+                const pelicula = row.querySelector('td:nth-child(2)').textContent.toLowerCase();
+                const sala = row.querySelector('.sala-nombre').textContent.toLowerCase();
+                
+                if (pelicula.includes(searchTerm) || sala.includes(searchTerm)) {
+                    row.style.display = "";
+                } else {
+                    row.style.display = "none";
+                }
+            });
+        });
+    </script>
+
 </body>
 </html>
