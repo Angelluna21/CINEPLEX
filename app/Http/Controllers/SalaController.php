@@ -9,11 +9,10 @@ use Illuminate\Validation\Rule;
 
 class SalaController extends Controller
 {
-    public function index()
-    {
-        // Traemos las salas incluyendo la información de su sucursal (Relación)
-        $salas = Sala::with('sucursal')->get();
-        return view('admin.salas.index', compact('salas'));
+    public function index() {
+        $salas = \App\Models\Sala::with('sucursal')->get();
+        $sucursales = \App\Models\Sucursal::all(); // Añade esta línea
+        return view('admin.salas.index', compact('salas', 'sucursales'));
     }
 
     public function create()

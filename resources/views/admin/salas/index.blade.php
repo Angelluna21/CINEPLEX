@@ -1,104 +1,111 @@
-@extends('layouts.app')
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Salas - Cineplex</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+</head>
+<body class="bg-[#0B0F19] text-white p-8 font-sans">
 
-@section('content')
-<div class="container mx-auto px-4 sm:px-8 max-w-7xl mt-8">
-    <div class="py-8">
-        <div class="flex flex-row mb-1 sm:mb-0 justify-between w-full">
-            <h2 class="text-2xl leading-tight font-bold text-gray-800">
-                Catálogo de Salas
-            </h2>
-            <div class="text-end">
-                <a href="{{ route('salas.create') }}" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg shadow-md transition duration-200">
+    <div class="max-w-6xl mx-auto mb-6">
+        <a href="{{ route('admin.dashboard') }}" class="group inline-flex items-center gap-2 bg-gray-800/40 hover:bg-[#E91E63] text-white px-4 py-2 rounded-xl border border-gray-700 transition-all shadow-lg">
+            <i class="bi bi-arrow-left-circle-fill text-xl transition-transform group-hover:-translate-x-1"></i>
+            <span class="font-bold text-sm uppercase tracking-wider">Volver al Panel</span>
+        </a>
+    </div>
+
+    <div class="max-w-6xl mx-auto bg-[#151E2E] p-8 rounded-2xl shadow-2xl border border-gray-800">
+        <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 mb-8">
+            <div>
+                <h1 class="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#00BCD4] to-[#42A5F5]">Salas de Cine</h1>
+                <p class="text-gray-400 text-sm mt-1">Gestión de espacios y capacidades</p>
+            </div>
+            
+            <div class="flex flex-col md:flex-row gap-3 w-full lg:w-auto">
+                <div class="relative">
+                    <span class="absolute inset-y-0 left-0 flex items-center pl-3">
+                        <i class="bi bi-search text-gray-500"></i>
+                    </span>
+                    <input type="text" id="salaSearch" placeholder="Buscar sala..." 
+                        class="w-full md:w-48 bg-[#0B0F19] border border-gray-700 rounded-full py-2 pl-10 pr-4 focus:outline-none focus:border-cyan-500 transition-all text-sm">
+                </div>
+
+                <select id="sucursalFilter" class="bg-[#0B0F19] border border-gray-700 rounded-full py-2 px-4 focus:outline-none focus:border-cyan-500 text-sm text-gray-300">
+                    <option value="">Todas las sucursales</option>
+                    @foreach($sucursales as $sucursal)
+                        <option value="{{ $sucursal->nombre }}">{{ $sucursal->nombre }}</option>
+                    @endforeach
+                </select>
+
+                <a href="{{ route('salas.create') }}" class="bg-cyan-600 hover:bg-cyan-700 text-white px-6 py-2.5 rounded-full font-bold transition-all shadow-lg text-center">
                     + Nueva Sala
                 </a>
             </div>
         </div>
-        
-        @if(session('success'))
-            <div class="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 mt-6 rounded-md shadow-sm" role="alert">
-                <p class="font-bold">¡Éxito!</p>
-                <p>{{ session('success') }}</p>
-            </div>
-        @endif
 
-        <div class="-mx-4 sm:-mx-8 px-4 sm:px-8 py-4 overflow-x-auto mt-4">
-            <div class="inline-block min-w-full shadow-lg rounded-lg overflow-hidden border border-gray-200">
-                <table class="min-w-full leading-normal">
-                    <thead>
-                        <tr>
-                            <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-800 text-left text-xs font-bold text-white uppercase tracking-wider">
-                                Sucursal
-                            </th>
-                            <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-800 text-left text-xs font-bold text-white uppercase tracking-wider">
-                                Sala
-                            </th>
-                            <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-800 text-left text-xs font-bold text-white uppercase tracking-wider">
-                                Tipo
-                            </th>
-                            <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-800 text-left text-xs font-bold text-white uppercase tracking-wider">
-                                Capacidad
-                            </th>
-                            <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-800 text-left text-xs font-bold text-white uppercase tracking-wider">
-                                Estatus
-                            </th>
-                            <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-800 text-left text-xs font-bold text-white uppercase tracking-wider">
-                                Acciones
-                            </th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach($salas as $sala)
-                            <tr class="hover:bg-gray-50 transition duration-150">
-                                <td class="px-5 py-4 border-b border-gray-200 bg-white text-sm">
-                                    <p class="text-gray-900 font-bold whitespace-no-wrap">{{ $sala->sucursal->nombre }}</p>
-                                </td>
-                                <td class="px-5 py-4 border-b border-gray-200 bg-white text-sm">
-                                    <p class="text-gray-900 whitespace-no-wrap font-medium">Sala {{ $sala->numero }}</p>
-                                </td>
-                                <td class="px-5 py-4 border-b border-gray-200 bg-white text-sm">
-                                    <p class="text-gray-600 whitespace-no-wrap">{{ $sala->nombre }}</p>
-                                </td>
-                                <td class="px-5 py-4 border-b border-gray-200 bg-white text-sm">
-                                    <p class="text-gray-600 whitespace-no-wrap">{{ $sala->capacidad }} asientos</p>
-                                </td>
-                                <td class="px-5 py-4 border-b border-gray-200 bg-white text-sm">
-                                    @if($sala->estatus == 'Disponible')
-                                        <span class="relative inline-block px-3 py-1 font-semibold text-green-800 leading-tight">
-                                            <span aria-hidden class="absolute inset-0 bg-green-200 opacity-50 rounded-full border border-green-300"></span>
-                                            <span class="relative text-xs">🟢 Disponible</span>
-                                        </span>
-                                    @else
-                                        <span class="relative inline-block px-3 py-1 font-semibold text-red-800 leading-tight">
-                                            <span aria-hidden class="absolute inset-0 bg-red-200 opacity-50 rounded-full border border-red-300"></span>
-                                            <span class="relative text-xs">🔴 Mantenimiento</span>
-                                        </span>
-                                    @endif
-                                </td>
-                                <td class="px-5 py-4 border-b border-gray-200 bg-white text-sm">
-                                    <div class="flex space-x-4">
-                                        <a href="{{ route('salas.edit', $sala->id) }}" class="text-blue-600 hover:text-blue-900 font-bold transition duration-200">
-                                            Editar
-                                        </a>
-                                        <form action="{{ route('salas.destroy', $sala->id) }}" method="POST" onsubmit="return confirm('¿Estás seguro de que deseas eliminar esta sala? Esta acción no se puede deshacer.');">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="text-red-600 hover:text-red-900 font-bold transition duration-200">
-                                                Eliminar
-                                            </button>
-                                        </form>
-                                    </div>
-                                </td>
-                            </tr>
-                        @endforeach
-                    </tbody>
-                </table>
-                @if($salas->isEmpty())
-                    <div class="px-5 py-10 bg-white text-center">
-                        <p class="text-gray-500 font-medium">Aún no hay salas registradas en el sistema.</p>
-                    </div>
-                @endif
-            </div>
+        <div class="overflow-hidden rounded-xl border border-gray-800">
+            <table class="w-full text-left">
+                <thead>
+                    <tr class="bg-gray-800/50 text-gray-300 text-xs uppercase tracking-widest">
+                        <th class="p-4">ID</th>
+                        <th class="p-4">Nombre de la Sala</th>
+                        <th class="p-4">Sucursal</th>
+                        <th class="p-4">Capacidad</th>
+                        <th class="p-4 text-center">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="salasTableBody">
+                    @forelse($salas as $sala)
+                    <tr class="border-b border-gray-800 hover:bg-gray-800/30 transition-colors sala-row">
+                        <td class="p-4 text-gray-500 font-mono text-sm">#{{ $sala->id }}</td>
+                        <td class="p-4 font-bold text-gray-200 sala-name">{{ $sala->nombre }}</td>
+                        <td class="p-4 text-gray-400 sala-sucursal">{{ $sala->sucursal->nombre ?? 'N/A' }}</td>
+                        <td class="p-4 text-cyan-400 font-bold">{{ $sala->capacidad }} asientos</td>
+                        <td class="p-4 text-center">
+                            <div class="flex justify-center gap-4">
+                                <a href="#" class="text-blue-400 hover:text-blue-200"><i class="bi bi-pencil-square text-lg"></i></a>
+                                <button class="text-red-400 hover:text-red-200"><i class="bi bi-trash3 text-lg"></i></button>
+                            </div>
+                        </td>
+                    </tr>
+                    @empty
+                    <tr>
+                        <td colspan="5" class="p-12 text-center text-gray-500 italic">No hay salas registradas.</td>
+                    </tr>
+                    @endforelse
+                </tbody>
+            </table>
         </div>
     </div>
-</div>
-@endsection
+
+    <script>
+        const salaSearch = document.getElementById('salaSearch');
+        const sucursalFilter = document.getElementById('sucursalFilter');
+        const rows = document.querySelectorAll('.sala-row');
+
+        function filterTable() {
+            const searchText = salaSearch.value.toLowerCase();
+            const selectedSucursal = sucursalFilter.value.toLowerCase();
+
+            rows.forEach(row => {
+                const name = row.querySelector('.sala-name').textContent.toLowerCase();
+                const sucursal = row.querySelector('.sala-sucursal').textContent.toLowerCase();
+                
+                const matchesSearch = name.includes(searchText);
+                const matchesSucursal = selectedSucursal === "" || sucursal === selectedSucursal;
+
+                if (matchesSearch && matchesSucursal) {
+                    row.style.display = "";
+                } else {
+                    row.style.display = "none";
+                }
+            });
+        }
+
+        salaSearch.addEventListener('keyup', filterTable);
+        sucursalFilter.addEventListener('change', filterTable);
+    </script>
+</body>
+</html>
