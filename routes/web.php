@@ -5,26 +5,22 @@ use Illuminate\Http\Request;
 use App\Models\Pelicula;
 use App\Models\Sucursal;
 
-// CONTROLADORES IMPORTADOS
+// CONTROLADORES
 use App\Http\Controllers\PeliculaController;
 use App\Http\Controllers\GenreController;
 use App\Http\Controllers\SalaController;
 use App\Http\Controllers\SucursalController;
-use App\Http\Controllers\FuncionController; // NUEVO: Importamos el controlador de Funciones
+use App\Http\Controllers\FuncionController;
 
 // ==========================================
 // VISTAS DEL CLIENTE (CARTELERA PÚBLICA)
 // ==========================================
 
 Route::get('/', function (Request $request) {
-    // Sucursales que se muestran en el menu del filtro
     $sucursales = Sucursal::all();
-    
-    // Query para filtracion 
     $sucursal_id = $request->query('sucursal');
 
     if ($sucursal_id) {
-        // Filtro de sucursal trayendo funciones ordenadas por fecha y hora
         $peliculas = Pelicula::whereHas('funciones.sala', function ($q) use ($sucursal_id) {
             $q->where('sucursal_id', $sucursal_id);
         })->with(['funciones' => function ($query) use ($sucursal_id) {
@@ -33,7 +29,6 @@ Route::get('/', function (Request $request) {
             })->orderBy('fecha')->orderBy('hora');
         }])->get();
     } else {
-        // Muestra de todas las peliculas con sus horarios ordenados
         $peliculas = Pelicula::with(['funciones' => function ($query) {
             $query->orderBy('fecha')->orderBy('hora');
         }])->get();
@@ -46,30 +41,26 @@ Route::get('/', function (Request $request) {
 // PANEL ADMINISTRATIVO (EMPLEADOS)
 // ==========================================
 
+// Ruta principal del Admin
 Route::get('/admin', function () {
-    return view('admin.dashboard');
+    return view('admin.index');
+})->name('admin.dashboard');
+
+// Agrupamos todo bajo 'admin/' para que sea ordenado
+Route::prefix('admin')->group(function () {
+    
+    // Módulo de Películas
+    Route::resource('peliculas', PeliculaController::class)->names('peliculas');
+
+    // Módulo de Géneros
+    Route::resource('generos', GenreController::class)->names('generos');
+
+    // Módulo de Sucursales
+    Route::resource('sucursales', SucursalController::class)->names('sucursales');
+
+    // Módulo de Salas
+    Route::resource('salas', SalaController::class)->names('salas');
+
+    // Módulo de Funciones
+    Route::resource('funciones', FuncionController::class)->names('funciones');
 });
-
-// MÓDULO DE PELÍCULAS
-Route::resource('admin/peliculas', PeliculaController::class)->parameters([
-    'peliculas' => 'pelicula'
-]);
-
-// MÓDULO DE GÉNEROS
-Route::resource('generos', GenreController::class);
-
-// MÓDULO DE SUCURSALES
-Route::resource('admin/sucursales', SucursalController::class);
-
-// MÓDULO DE SALAS
-Route::resource('admin/salas', SalaController::class)->parameters([
-    'salas' => 'sala'
-]);
-
-// ==========================================
-// MÓDULO DE FUNCIONES (CARTELERA)
-// ==========================================
-// Toda la lógica pesada ahora vive en FuncionController
-Route::resource('admin/funciones', FuncionController::class)->parameters([
-    'funciones' => 'funcion'
-]);

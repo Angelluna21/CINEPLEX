@@ -1,41 +1,45 @@
-@extends('layouts.app')
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Géneros - Cineplex</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-[#0B0F19] text-white p-8">
 
-@section('content')
-<div class="container mx-auto mt-8 px-4 max-w-xl">
-    <div class="flex justify-between items-center mb-6">
-        <h1 class="text-3xl font-bold text-gray-800">Editar Género</h1>
-        <a href="{{ route('generos.index') }}" class="text-blue-600 hover:underline">&larr; Volver</a>
+    <div class="max-w-4xl mx-auto mb-6">
+        <a href="/admin" class="text-gray-400 hover:text-[#E91E63] flex items-center gap-2 transition-colors">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                <path fill-rule="evenodd" d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8z"/>
+            </svg>
+            Regresar al Panel
+        </a>
     </div>
 
-    @if ($errors->any())
-        <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-            <ul class="list-disc ml-4">
-                @foreach ($errors->all() as $error)
-                    <li>{{ $error }}</li>
-                @endforeach
-            </ul>
+    <div class="max-w-4xl mx-auto bg-[#151E2E] p-8 rounded-2xl shadow-xl border border-gray-800">
+        <div class="flex justify-between items-center mb-6">
+            <h1 class="text-2xl font-bold text-pink-500">Géneros de Películas</h1>
+            <a href="/generos/create" class="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg text-sm font-bold">
+                + Nuevo Género
+            </a>
         </div>
-    @endif
 
-    <div class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4 border-t-4 border-yellow-500">
-        <form action="{{ route('generos.update', $genero->id) }}" method="POST">
-            @csrf
-            @method('PUT') <div class="mb-6">
-                <label class="block text-gray-700 text-sm font-bold mb-2" for="nombre">
-                    Nombre del Género
-                </label>
-                <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-yellow-500" 
-                    id="nombre" name="nombre" type="text" value="{{ old('nombre', $genero->nombre) }}" 
-                    minlength="3" maxlength="50" pattern="[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+" 
-                    title="Solo letras, mínimo 3 y máximo 50." required>
-            </div>
-
-            <div class="flex items-center justify-end">
-                <button class="bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-2 px-6 rounded transition duration-200" type="submit">
-                    Actualizar Género
-                </button>
-            </div>
-        </form>
+        <table class="w-full text-left">
+            <thead>
+                <tr class="border-b border-gray-700 text-gray-400">
+                    <th class="p-3">ID</th>
+                    <th class="p-3">Nombre</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach($generos as $genero)
+                <tr class="border-b border-gray-800 hover:bg-gray-800/40">
+                    <td class="p-3">#{{ $genero->id }}</td>
+                    <td class="p-3 font-medium">{{ $genero->nombre }}</td>
+                </tr>
+                @endforeach
+            </tbody>
+        </table>
     </div>
-</div>
-@endsection
+</body>
+</html>
