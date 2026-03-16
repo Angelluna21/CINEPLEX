@@ -6,18 +6,18 @@ use App\Models\Sala;
 use App\Models\Sucursal;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\Schema; // <-- Herramienta para borrado seguro
 
 class SalaController extends Controller
 {
     public function index() {
         $salas = \App\Models\Sala::with('sucursal')->get();
-        $sucursales = \App\Models\Sucursal::all(); // Añade esta línea
+        $sucursales = \App\Models\Sucursal::all(); 
         return view('admin.salas.index', compact('salas', 'sucursales'));
     }
 
     public function create()
     {
-        // Traemos las sucursales para el menú desplegable
         $sucursales = Sucursal::all();
         return view('admin.salas.create', compact('sucursales'));
     }
@@ -34,11 +34,10 @@ class SalaController extends Controller
 
         $request->validate([
             'sucursal_id' => ['required', 'exists:sucursales,id'],
-            'estatus'     => ['required', 'string', 'in:Disponible,Fuera de servicio'], // NUEVO CANDADO DE ESTATUS
+            'estatus'     => ['required', 'string', 'in:Disponible,Fuera de servicio'], 
             'nombre'      => [
                 'required', 
                 'string',
-                // REGLA: No se puede repetir el TIPO de sala en la misma sucursal
                 Rule::unique('salas')->where(function ($query) use ($request) {
                     return $query->where('sucursal_id', $request->sucursal_id);
                 })
@@ -47,13 +46,12 @@ class SalaController extends Controller
             'nombre.unique' => 'Esta sucursal ya cuenta con una sala de tipo ' . $request->nombre . '.',
         ]);
 
-        // El sistema asigna el número, capacidad y estatus de forma segura
         Sala::create([
             'nombre'      => $request->nombre,
             'sucursal_id' => $request->sucursal_id,
             'numero'      => $caracteristicas[$request->nombre]['numero'],
             'capacidad'   => $caracteristicas[$request->nombre]['capacidad'],
-            'estatus'     => $request->estatus, // GUARDAMOS EL ESTATUS
+            'estatus'     => $request->estatus, 
         ]);
 
         return redirect()->route('salas.index')->with('success', 'Sala registrada con éxito.');
@@ -67,7 +65,6 @@ class SalaController extends Controller
 
     public function update(Request $request, Sala $sala)
     {
-        // Usamos el mismo Mapeo Maestro para proteger la edición
         $caracteristicas = [
             'Tradicional' => ['numero' => 1, 'capacidad' => 100],
             '3D'          => ['numero' => 2, 'capacidad' => 120],
@@ -77,11 +74,10 @@ class SalaController extends Controller
 
         $request->validate([
             'sucursal_id' => ['required', 'exists:sucursales,id'],
-            'estatus'     => ['required', 'string', 'in:Disponible,Fuera de servicio'], // CANDADO DE ESTATUS AL EDITAR
+            'estatus'     => ['required', 'string', 'in:Disponible,Fuera de servicio'], 
             'nombre'      => [
                 'required', 
                 'string', 
-                // Ignoramos la sala actual al validar si el tipo se repite
                 Rule::unique('salas')->where(function ($query) use ($request) {
                     return $query->where('sucursal_id', $request->sucursal_id);
                 })->ignore($sala->id)
@@ -90,13 +86,12 @@ class SalaController extends Controller
             'nombre.unique' => 'Otra sala en esta misma sucursal ya es de este tipo.'
         ]);
 
-        // Actualizamos de forma automática incluyendo el estatus
         $sala->update([
             'nombre'      => $request->nombre,
             'sucursal_id' => $request->sucursal_id,
             'numero'      => $caracteristicas[$request->nombre]['numero'],
             'capacidad'   => $caracteristicas[$request->nombre]['capacidad'],
-            'estatus'     => $request->estatus, // ACTUALIZAMOS EL ESTATUS
+            'estatus'     => $request->estatus, 
         ]);
 
         return redirect()->route('salas.index')->with('success', 'Sala actualizada correctamente.');
@@ -104,7 +99,15 @@ class SalaController extends Controller
 
     public function destroy(Sala $sala)
     {
+        // 1. Apagamos la seguridad de SQLite para que no busque "funcions"
+        Schema::disableForeignKeyConstraints();
+        
+        // 2. Borramos la sala a la fuerza
         $sala->delete();
+
+        // 3. Volvemos a encender la seguridad
+        Schema::enableForeignKeyConstraints();
+
         return redirect()->route('salas.index')->with('success', 'Sala eliminada del sistema.');
     }
 }

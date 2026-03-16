@@ -17,6 +17,14 @@
     </div>
 
     <div class="max-w-6xl mx-auto bg-[#151E2E] p-8 rounded-2xl shadow-2xl border border-gray-800">
+        
+        @if(session('success'))
+            <div class="mb-6 p-4 bg-green-500/20 border border-green-500 text-green-400 rounded-xl flex items-center gap-3">
+                <i class="bi bi-check-circle-fill"></i>
+                {{ session('success') }}
+            </div>
+        @endif
+
         <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 mb-8">
             <div>
                 <h1 class="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#00BCD4] to-[#42A5F5]">Salas de Cine</h1>
@@ -65,8 +73,17 @@
                         <td class="p-4 text-cyan-400 font-bold">{{ $sala->capacidad }} asientos</td>
                         <td class="p-4 text-center">
                             <div class="flex justify-center gap-4">
-                                <a href="#" class="text-blue-400 hover:text-blue-200"><i class="bi bi-pencil-square text-lg"></i></a>
-                                <button class="text-red-400 hover:text-red-200"><i class="bi bi-trash3 text-lg"></i></button>
+                                <a href="{{ route('salas.edit', $sala->id) }}" class="text-blue-400 hover:text-blue-200">
+                                    <i class="bi bi-pencil-square text-lg"></i>
+                                </a>
+                                
+                                <form action="{{ route('salas.destroy', $sala->id) }}" method="POST" class="inline" onsubmit="return confirm('¿Seguro que deseas eliminar esta sala?');">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="text-red-400 hover:text-red-200 cursor-pointer bg-transparent border-none p-0 m-0">
+                                        <i class="bi bi-trash3 text-lg"></i>
+                                    </button>
+                                </form>
                             </div>
                         </td>
                     </tr>
