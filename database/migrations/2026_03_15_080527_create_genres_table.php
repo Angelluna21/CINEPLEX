@@ -10,13 +10,14 @@ return new class extends Migration
      * Run the migrations.
      */
     public function up(): void
-{
-    Schema::create('genres', function (Blueprint $table) {
-        $table->id();
-        $table->string('nombre', 50)->unique(); // <--- ESTA LÍNEA ES LA IMPORTANTE
-        $table->timestamps();
-    });
-}
+    {
+        Schema::create('genres', function (Blueprint $table) {
+            $table->id();
+            // Nombre único y máximo 50 caracteres para optimizar la base de datos
+            $table->string('nombre', 50)->unique(); 
+            $table->timestamps();
+        });
+    }
 
     /**
      * Reverse the migrations.

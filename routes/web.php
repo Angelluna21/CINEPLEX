@@ -60,7 +60,9 @@ Route::get('/admin', function () {
 Route::prefix('admin')->group(function () {
     
     Route::resource('peliculas', PeliculaController::class)->names('peliculas');
-    Route::resource('generos', GenreController::class)->names('generos');
+    Route::resource('generos', GenreController::class)->parameters([
+        'generos' => 'genre'
+    ]);
     Route::resource('sucursales', SucursalController::class)->names('sucursales');
     Route::resource('salas', SalaController::class)->names('salas');
     Route::resource('usuarios', UserController::class)->names('usuarios');

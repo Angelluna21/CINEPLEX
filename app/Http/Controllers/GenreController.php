@@ -2,14 +2,15 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Genre; 
+use App\Models\Genre;
 use Illuminate\Http\Request;
 
 class GenreController extends Controller
 {
     public function index()
     {
-        $generos = Genre::all();
+        // Ya no filtramos aquí. Mandamos todos y dejamos que JavaScript haga la magia rápida.
+        $generos = Genre::orderBy('nombre', 'asc')->get();
         return view('admin.generos.index', compact('generos'));
     }
 
@@ -20,29 +21,51 @@ class GenreController extends Controller
 
     public function store(Request $request)
     {
-        $request->validate(['nombre' => 'required|unique:genres|max:255']);
-        Genre::create($request->all());
-        return redirect()->route('generos.index')->with('success', 'Género creado correctamente.');
+        $nombreFormateado = ucfirst(strtolower(trim($request->nombre)));
+        $request->merge(['nombre' => $nombreFormateado]);
+
+        $request->validate([
+            'nombre' => ['required', 'string', 'max:50', 'unique:genres,nombre', 'regex:/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/u'],
+        ], [
+            'nombre.unique' => '¡Ese género ya existe!',
+            'nombre.regex' => 'Solo se permiten letras y espacios.',
+        ]);
+
+        Genre::create(['nombre' => $nombreFormateado]);
+
+        return redirect()->route('generos.index')->with('success', '¡Género agregado!');
     }
 
-    public function edit($id)
+    // --- NUEVO: Función para mostrar el formulario de edición ---
+    public function edit(Genre $genre)
     {
-        $genero = Genre::findOrFail($id);
-        return view('admin.generos.edit', compact('genero'));
+        return view('admin.generos.edit', compact('genre'));
     }
 
-    public function update(Request $request, $id)
+    public function update(Request $request, Genre $genre)
     {
-        $request->validate(['nombre' => 'required|max:255']);
-        $genero = Genre::findOrFail($id);
-        $genero->update($request->all());
-        return redirect()->route('generos.index')->with('success', 'Género actualizado.');
+        $nombreFormateado = ucfirst(strtolower(trim($request->nombre)));
+        $request->merge(['nombre' => $nombreFormateado]);
+
+        $request->validate([
+            'nombre' => [
+                'required', 'string', 'max:50', 
+                'unique:genres,nombre,' . $genre->id, // Usa $genre en inglés
+                'regex:/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/u'
+            ],
+        ], [
+            'nombre.unique' => '¡Ese género ya existe!',
+            'nombre.regex' => 'Solo se permiten letras y espacios.',
+        ]);
+
+        $genre->update(['nombre' => $nombreFormateado]);
+
+        return redirect()->route('generos.index')->with('success', 'Género actualizado correctamente.');
     }
 
-    public function destroy($id)
+    public function destroy(Genre $genre)
     {
-        $genero = Genre::findOrFail($id);
-        $genero->delete();
-        return redirect()->route('generos.index')->with('success', 'Género eliminado.');
+        $genre->delete();
+        return redirect()->route('generos.index')->with('success', 'Género eliminado de la base de datos.');
     }
 }
