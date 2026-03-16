@@ -10,17 +10,13 @@ class Pelicula extends Model
     use HasFactory;
 
     protected $fillable = [
-        'titulo', 
-        'genero', 
-        'clasificacion', 
-        'duracion', 
-        'estatus', 
-        'sinopsis'
+        'titulo',
+        'sinopsis',
+        'genero',
+        'clasificacion',
+        'estatus',
+        'duracion',
+        'idioma',
+        'formato'
     ];
-
-    // Pelicula a funciones
-    public function funciones()
-    {
-        return $this->hasMany(Funcion::class);
-    }
 }

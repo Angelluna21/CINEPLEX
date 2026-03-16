@@ -66,18 +66,23 @@
                             ${{ number_format($funcion->precio, 2) }}
                         </td>
                         <td class="p-4">
-                            <div class="flex justify-center gap-4">
+                            <div class="flex justify-center items-center gap-4">
+                                
                                 <a href="{{ route('funciones.edit', $funcion->id) }}" class="text-blue-400 hover:text-blue-200 transition-all">
                                     <i class="bi bi-pencil-square text-xl"></i>
                                 </a>
                                 
-                                <form action="{{ route('funciones.destroy', $funcion->id) }}" method="POST" class="inline" onsubmit="return confirm('¿Seguro que deseas eliminar este horario?');">
+                                <a href="javascript:void(0)" 
+                                   onclick="if(confirm('¿Seguro que deseas eliminar esta función de la cartelera?')) { document.getElementById('delete-form-{{ $funcion->id }}').submit(); }" 
+                                   class="text-red-500 hover:text-red-300 transition-all">
+                                    <i class="bi bi-trash3-fill text-xl"></i>
+                                </a>
+
+                                <form id="delete-form-{{ $funcion->id }}" action="{{ route('funciones.destroy', $funcion->id) }}" method="POST" style="display: none;">
                                     @csrf
                                     @method('DELETE')
-                                    <button type="submit" class="text-red-500 hover:text-red-300 transition-all">
-                                        <i class="bi bi-trash3-fill text-xl"></i>
-                                    </button>
                                 </form>
+
                             </div>
                         </td>
                     </tr>

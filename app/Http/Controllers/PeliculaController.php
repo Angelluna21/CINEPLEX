@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Pelicula;
-use App\Models\Genre; // Importamos el modelo de Géneros
+use App\Models\Genre;
 use Illuminate\Http\Request;
 
 class PeliculaController extends Controller
@@ -16,7 +16,6 @@ class PeliculaController extends Controller
 
     public function create()
     {
-        // Traemos todos los géneros para el select
         $generos = Genre::all(); 
         return view('admin.peliculas.create', compact('generos'));
     }
@@ -24,40 +23,46 @@ class PeliculaController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'titulo' => ['required', 'string', 'max:255', 'unique:peliculas'],
-            'genero' => ['required', 'string'], // Validamos el género
+            'titulo' => ['required', 'string', 'max:255', 'unique:peliculas,titulo'],
+            'genero' => ['required', 'string'],
             'clasificacion' => ['required', 'string'],
             'duracion' => ['required', 'integer', 'min:1'],
+            'idioma' => ['required', 'string'],
+            'formato' => ['required', 'string'],
             'estatus' => ['required', 'string'],
             'sinopsis' => ['required', 'string', 'min:10'],
+        ], [
+            'titulo.unique' => '¡Esta película ya se encuentra registrada en la cartelera!',
         ]);
 
         Pelicula::create($request->all());
 
-        return redirect()->route('peliculas.index')->with('success', 'Película creada con éxito.');
+        return redirect()->route('peliculas.index')->with('success', '¡La película "' . $request->titulo . '" se guardó con éxito!');
     }
-    // ... resto de funciones
-
 
     public function edit(Pelicula $pelicula)
     {
-        return view('admin.peliculas.edit', compact('pelicula'));
+        $generos = Genre::all();
+        return view('admin.peliculas.edit', compact('pelicula', 'generos'));
     }
 
     public function update(Request $request, Pelicula $pelicula)
-{
-    $request->validate([
-        // Ignora el ID actual para que permita guardar si no cambiaste el título
-        'titulo' => ['required', 'string', 'max:255', 'unique:peliculas,titulo,' . $pelicula->id],
-        'clasificacion' => ['required', 'string'],
-        'duracion' => ['required', 'integer'],
-        'estatus' => ['required', 'string'],
-    ]);
+    {
+        $request->validate([
+            'titulo' => ['required', 'string', 'max:255', 'unique:peliculas,titulo,' . $pelicula->id],
+            'genero' => ['required', 'string'],
+            'clasificacion' => ['required', 'string'],
+            'duracion' => ['required', 'integer'],
+            'idioma' => ['required', 'string'],
+            'formato' => ['required', 'string'],
+            'estatus' => ['required', 'string'],
+            'sinopsis' => ['required', 'string'],
+        ]);
 
-    $pelicula->update($request->all());
+        $pelicula->update($request->all());
 
-    return redirect()->route('peliculas.index')->with('success', 'Película actualizada.');
-}
+        return redirect()->route('peliculas.index')->with('success', 'La película se ha actualizado correctamente.');
+    }
 
     public function destroy(Pelicula $pelicula)
     {

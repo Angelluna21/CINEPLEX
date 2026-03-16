@@ -1,47 +1,59 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="container mx-auto mt-8 px-4 max-w-2xl">
-    <div class="bg-white shadow-md rounded-lg overflow-hidden border border-gray-200">
-        <div class="bg-gray-800 px-6 py-4">
-            <h2 class="text-xl font-bold text-white">Registrar Nueva Película</h2>
+<div class="container mx-auto mt-8 px-4 max-w-4xl font-sans text-white">
+    
+    <div class="mb-6">
+        <a href="{{ route('peliculas.index') }}" class="group inline-flex items-center gap-2 bg-gray-800/40 hover:bg-[#E91E63] text-white px-4 py-2 rounded-xl border border-gray-700 transition-all shadow-lg">
+            <i class="bi bi-arrow-left-circle-fill text-xl transition-transform group-hover:-translate-x-1"></i>
+            <span class="font-bold text-sm uppercase tracking-wider">Volver a Cartelera</span>
+        </a>
+    </div>
+
+    <div class="bg-[#151E2E] shadow-2xl rounded-3xl overflow-hidden border border-gray-800">
+        
+        <div class="px-8 py-6 border-b border-gray-800 bg-gray-900/30">
+            <h2 class="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-[#42A5F5] to-[#E91E63]">Registrar Nueva Película</h2>
+            <p class="text-gray-400 text-sm mt-1">Ingresa los datos del nuevo título para la cartelera.</p>
         </div>
 
-        <form action="{{ route('peliculas.store') }}" method="POST" class="p-6 space-y-4 bg-white">
+        <form action="{{ route('peliculas.store') }}" method="POST" class="p-8 space-y-6">
             @csrf
 
             <div>
-                <label for="titulo" class="block text-sm font-medium text-gray-700 mb-1">Título de la Película</label>
+                <label for="titulo" class="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Título de la Película <span class="text-red-500">*</span></label>
                 <input type="text" name="titulo" id="titulo" value="{{ old('titulo') }}" 
-                    class="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm bg-white text-gray-900"
+                    class="block w-full bg-[#0B0F19] border border-gray-700 rounded-xl py-3 px-4 text-white focus:outline-none focus:ring-1 focus:ring-[#E91E63] focus:border-[#E91E63] transition-all shadow-inner @error('titulo') border-red-500 ring-1 ring-red-500 @enderror"
                     placeholder="Escribe el nombre aquí..." required>
+                
                 @error('titulo')
-                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                    <div class="mt-2 text-red-400 text-sm flex items-center gap-2 bg-red-500/10 p-3 rounded-lg border border-red-500/20 font-bold">
+                        <i class="bi bi-exclamation-triangle-fill"></i> {{ $message }}
+                    </div>
                 @enderror
             </div>
 
             <div>
-    <label for="genero" class="block text-sm font-medium text-gray-700 mb-1">Género</label>
-    <select name="genero" id="genero" 
-        class="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-900 @error('genero') border-red-500 @enderror">
-        <option value="">-- Selecciona un género --</option>
-        @foreach($generos as $g)
-            <option value="{{ $g->nombre }}" {{ old('genero') == $g->nombre ? 'selected' : '' }}>
-                {{ $g->nombre }}
-            </option>
-        @endforeach
-    </select>
-    @error('genero')
-        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-    @enderror
-</div>
+                <label for="genero" class="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Género <span class="text-red-500">*</span></label>
+                <select name="genero" id="genero" 
+                    class="block w-full bg-[#0B0F19] border border-gray-700 rounded-xl py-3 px-4 text-white focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-all appearance-none @error('genero') border-red-500 @enderror" required>
+                    <option value="" disabled selected>-- Selecciona un género --</option>
+                    @foreach($generos as $g)
+                        <option value="{{ $g->nombre }}" {{ old('genero') == $g->nombre ? 'selected' : '' }}>
+                            {{ $g->nombre }}
+                        </option>
+                    @endforeach
+                </select>
+                @error('genero')
+                    <p class="text-red-400 text-xs mt-1 font-semibold">{{ $message }}</p>
+                @enderror
+            </div>
 
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                    <label for="clasificacion" class="block text-sm font-medium text-gray-700 mb-1">Clasificación</label>
+                    <label for="clasificacion" class="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Clasificación <span class="text-red-500">*</span></label>
                     <select name="clasificacion" id="clasificacion" 
-                        class="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm bg-white text-gray-900">
+                        class="block w-full bg-[#0B0F19] border border-gray-700 rounded-xl py-3 px-4 text-white focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-all appearance-none">
                         <option value="A" {{ old('clasificacion') == 'A' ? 'selected' : '' }}>A (Todo público)</option>
                         <option value="B" {{ old('clasificacion') == 'B' ? 'selected' : '' }}>B (12+ años)</option>
                         <option value="B15" {{ old('clasificacion') == 'B15' ? 'selected' : '' }}>B15 (15+ años)</option>
@@ -50,46 +62,75 @@
                 </div>
 
                 <div>
-                    <label for="duracion" class="block text-sm font-medium text-gray-700 mb-1">Duración (minutos)</label>
-                    <input type="number" name="duracion" id="duracion" value="{{ old('duracion') }}" 
-                        class="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm bg-white text-gray-900"
+                    <label for="duracion" class="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Duración (minutos) <span class="text-red-500">*</span></label>
+                    <input type="number" name="duracion" id="duracion" value="{{ old('duracion') }}" min="1"
+                        class="block w-full bg-[#0B0F19] border border-gray-700 rounded-xl py-3 px-4 text-white focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-all shadow-inner"
                         placeholder="Ej. 120" required>
                 </div>
             </div>
 
-            <div class="bg-gray-50 p-3 rounded-md border border-gray-100">
-                <label class="block text-sm font-medium text-gray-700 mb-2">Estatus en Cine</label>
-                <div class="flex space-x-6">
-                    <label class="inline-flex items-center cursor-pointer">
-                        <input type="radio" name="estatus" value="Estreno" class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300" {{ old('estatus') == 'Estreno' ? 'checked' : '' }}>
-                        <span class="ml-2 text-sm text-gray-900">Estreno</span>
-                    </label>
-                    <label class="inline-flex items-center cursor-pointer">
-                        <input type="radio" name="estatus" value="Cartelera" class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300" {{ old('estatus', 'Cartelera') == 'Cartelera' ? 'checked' : '' }}>
-                        <span class="ml-2 text-sm text-gray-900">Cartelera</span>
-                    </label>
-                    <label class="inline-flex items-center cursor-pointer">
-                        <input type="radio" name="estatus" value="Próximamente" class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300" {{ old('estatus') == 'Próximamente' ? 'checked' : '' }}>
-                        <span class="ml-2 text-sm text-gray-900">Próximamente</span>
-                    </label>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 p-6 bg-gray-900/50 rounded-2xl border border-gray-800">
+                <div>
+                    <label for="idioma" class="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Idioma Audio <span class="text-red-500">*</span></label>
+                    <select name="idioma" id="idioma" class="w-full bg-[#0B0F19] border border-gray-700 rounded-xl px-4 py-3 text-white focus:border-purple-500 focus:ring-1 focus:ring-purple-500 outline-none transition-all appearance-none" required>
+                        <option value="" disabled selected>-- Selecciona el idioma --</option>
+                        <option value="Español" {{ old('idioma') == 'Español' ? 'selected' : '' }}>Español</option>
+                        <option value="Inglés" {{ old('idioma') == 'Inglés' ? 'selected' : '' }}>Inglés</option>
+                        <option value="Japonés" {{ old('idioma') == 'Japonés' ? 'selected' : '' }}>Japonés</option>
+                        <option value="Otro" {{ old('idioma') == 'Otro' ? 'selected' : '' }}>Otro</option>
+                    </select>
+                </div>
+                
+                <div>
+                    <label class="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">Formato <span class="text-red-500">*</span></label>
+                    <div class="flex flex-wrap gap-6">
+                        <label class="inline-flex items-center cursor-pointer group">
+                            <input type="radio" name="formato" value="DOB" class="h-5 w-5 text-purple-500 focus:ring-purple-500 border-gray-600 bg-[#0B0F19]" required {{ old('formato') == 'DOB' ? 'checked' : '' }}>
+                            <span class="ml-2 text-sm text-gray-300 group-hover:text-white transition-colors">Doblada (DOB)</span>
+                        </label>
+                        <label class="inline-flex items-center cursor-pointer group">
+                            <input type="radio" name="formato" value="SUB" class="h-5 w-5 text-purple-500 focus:ring-purple-500 border-gray-600 bg-[#0B0F19]" required {{ old('formato') == 'SUB' ? 'checked' : '' }}>
+                            <span class="ml-2 text-sm text-gray-300 group-hover:text-white transition-colors">Subtitulada (SUB)</span>
+                        </label>
+                    </div>
                 </div>
             </div>
 
-            <div class="mt-4">
-    <label for="sinopsis" class="block text-sm font-medium text-gray-700 mb-1">Sinopsis</label>
-    <textarea name="sinopsis" id="sinopsis" rows="4" 
-        class="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-900 @error('sinopsis') border-red-500 @enderror"
-        placeholder="Escribe el resumen de la película aquí..." required>{{ old('sinopsis') }}</textarea>
-    @error('sinopsis')
-        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-    @enderror
-</div>
+            <div class="bg-gray-900/50 p-5 rounded-2xl border border-gray-800">
+                <label class="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">Estatus en Cine</label>
+                <div class="flex flex-wrap gap-6">
+                    <label class="inline-flex items-center cursor-pointer group">
+                        <input type="radio" name="estatus" value="Estreno" class="h-5 w-5 text-[#E91E63] focus:ring-[#E91E63] border-gray-600 bg-[#0B0F19]" required {{ old('estatus') == 'Estreno' ? 'checked' : '' }}>
+                        <span class="ml-2 text-sm text-gray-300 group-hover:text-white transition-colors">Estreno</span>
+                    </label>
+                    <label class="inline-flex items-center cursor-pointer group">
+                        <input type="radio" name="estatus" value="Cartelera" class="h-5 w-5 text-[#42A5F5] focus:ring-[#42A5F5] border-gray-600 bg-[#0B0F19]" required {{ old('estatus', 'Cartelera') == 'Cartelera' ? 'checked' : '' }}>
+                        <span class="ml-2 text-sm text-gray-300 group-hover:text-white transition-colors">Cartelera</span>
+                    </label>
+                    <label class="inline-flex items-center cursor-pointer group">
+    <input type="radio" name="estatus" value="Próximamente" class="h-5 w-5 text-purple-500 focus:ring-purple-500 border-gray-600 bg-[#0B0F19]" required {{ old('estatus') == 'Próximamente' ? 'checked' : '' }}>
+    <span class="ml-2 text-sm text-gray-300 group-hover:text-white transition-colors">Próximamente</span>
+</label>
+                </div>
+            </div>
 
-            <div class="flex justify-end space-x-3 pt-6 border-t border-gray-100">
-                <a href="{{ route('peliculas.index') }}" class="bg-gray-100 hover:bg-gray-200 text-gray-800 font-semibold py-2 px-5 rounded shadow-sm text-sm transition duration-200">
+            <div>
+                <label for="sinopsis" class="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Sinopsis <span class="text-red-500">*</span></label>
+                <textarea name="sinopsis" id="sinopsis" rows="4" 
+                    class="block w-full bg-[#0B0F19] border border-gray-700 rounded-xl py-3 px-4 text-white focus:outline-none focus:ring-1 focus:ring-[#E91E63] focus:border-[#E91E63] transition-all shadow-inner @error('sinopsis') border-red-500 ring-1 ring-red-500 @enderror"
+                    placeholder="Escribe el resumen de la película aquí..." required>{{ old('sinopsis') }}</textarea>
+                @error('sinopsis')
+                    <div class="mt-2 text-red-400 text-sm flex items-center gap-2 bg-red-500/10 p-3 rounded-lg border border-red-500/20 font-bold">
+                        <i class="bi bi-exclamation-triangle-fill"></i> {{ $message }}
+                    </div>
+                @enderror
+            </div>
+
+            <div class="flex justify-end items-center gap-4 pt-6 border-t border-gray-800">
+                <a href="{{ route('peliculas.index') }}" class="text-gray-400 hover:text-white font-bold py-2 px-4 transition-colors text-sm uppercase tracking-wide">
                     Cancelar
                 </a>
-                <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded shadow-md text-sm transition duration-200">
+                <button type="submit" class="bg-gradient-to-r from-[#42A5F5] to-[#E91E63] hover:scale-105 text-white font-bold py-3 px-8 rounded-xl shadow-[0_0_20px_rgba(233,30,99,0.3)] text-sm uppercase tracking-wide transition-all">
                     Guardar Película
                 </button>
             </div>
