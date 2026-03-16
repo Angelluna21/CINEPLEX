@@ -2,8 +2,12 @@
 
 use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
+
+// MODELOS
 use App\Models\Pelicula;
 use App\Models\Sucursal;
+use App\Models\User;
+use App\Models\Genre; // O el nombre que tenga tu modelo de géneros
 
 // CONTROLADORES
 use App\Http\Controllers\PeliculaController;
@@ -11,6 +15,7 @@ use App\Http\Controllers\GenreController;
 use App\Http\Controllers\SalaController;
 use App\Http\Controllers\SucursalController;
 use App\Http\Controllers\FuncionController;
+use App\Http\Controllers\UserController;
 
 // ==========================================
 // VISTAS DEL CLIENTE (CARTELERA PÚBLICA)
@@ -41,9 +46,14 @@ Route::get('/', function (Request $request) {
 // PANEL ADMINISTRATIVO (EMPLEADOS)
 // ==========================================
 
-// Ruta principal del Admin
+// Ruta principal del Admin con conteos para las tarjetas
 Route::get('/admin', function () {
-    return view('admin.index');
+    $countUsuarios = User::count();
+    $countPeliculas = Pelicula::count();
+    $countSucursales = Sucursal::count();
+    
+    // Pasamos las variables a la vista para que no den error
+    return view('admin.index', compact('countUsuarios', 'countPeliculas', 'countSucursales'));
 })->name('admin.dashboard');
 
 // Agrupamos todo bajo 'admin/' para que sea ordenado
@@ -63,4 +73,7 @@ Route::prefix('admin')->group(function () {
 
     // Módulo de Funciones
     Route::resource('funciones', FuncionController::class)->names('funciones');
+
+    // Módulo de Usuarios
+    Route::resource('usuarios', UserController::class)->names('usuarios');
 });
