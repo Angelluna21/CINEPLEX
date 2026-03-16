@@ -3,140 +3,66 @@
 namespace App\Http\Controllers;
 
 use App\Models\Funcion;
-use App\Models\Pelicula;
 use App\Models\Sala;
+// use App\Models\Pelicula; // Lo dejamos listo por si tienes modelo de películas
 use Illuminate\Http\Request;
-use Carbon\Carbon;
 
 class FuncionController extends Controller
 {
-    // Tarifario maestro seguro en el Backend
-    private $precios = [
-        'Tradicional' => 80.00,
-        '3D'          => 105.00,
-        '4D'          => 120.00,
-        'IMAX'        => 135.00
-    ];
-
-    public function index(Request $request)
+    public function index()
     {
-        // Iniciamos la consulta base con sus relaciones
-        $query = Funcion::with(['pelicula', 'sala.sucursal']);
-
-        // FILTRO 1: Por Fecha
-        if ($request->filled('fecha')) {
-            $query->where('fecha', $request->fecha);
-        }
-
-        // FILTRO 2: Por Nombre de Película (Búsqueda aproximada)
-        if ($request->filled('pelicula')) {
-            $query->whereHas('pelicula', function($q) use ($request) {
-                $q->where('titulo', 'like', '%' . $request->pelicula . '%');
-            });
-        }
-
-        // Ejecutamos la consulta ordenada
-        $funciones = $query->orderBy('fecha', 'desc')
-                           ->orderBy('hora', 'desc')
-                           ->get();
-                            
+        // Traemos todas las funciones registradas
+        $funciones = Funcion::all();
         return view('admin.funciones.index', compact('funciones'));
     }
+
     public function create()
     {
-        $peliculas = Pelicula::whereIn('estatus', ['Estreno', 'Cartelera'])->get(); 
-        $salas = Sala::with('sucursal')->where('estatus', 'Disponible')->get(); 
-        
-        return view('admin.funciones.create', compact('peliculas', 'salas'));
+        // Esta vista la crearemos en el siguiente paso
+        return view('admin.funciones.create');
     }
 
     public function store(Request $request)
     {
         $request->validate([
-            'pelicula_id' => 'required|exists:peliculas,id',
-            'sala_id'     => 'required|exists:salas,id',
-            'fecha'       => 'required|date|after_or_equal:today',
-            'hora'        => 'required'
+            'pelicula_id' => 'required|integer',
+            'sala_id' => 'required|exists:salas,id',
+            'fecha' => 'required|date',
+            'hora' => 'required',
+            'precio' => 'required|numeric'
         ]);
 
-        $hora_formateada = Carbon::parse($request->hora)->format('H:i:s');
-
-        // Validar Empalme
-        $conflicto = Funcion::where('sala_id', $request->sala_id)
-                            ->where('fecha', $request->fecha)
-                            ->where('hora', $hora_formateada)
-                            ->first();
-
-        if ($conflicto) {
-            return redirect()->back()
-                   ->with('error', 'Error: Esta sala ya tiene una función programada en ese horario exacto.')
-                   ->withInput();
-        }
-
-        // MAGIA DE SEGURIDAD: Obtenemos la sala para saber su tipo y asignar el precio correcto
-        $sala = Sala::findOrFail($request->sala_id);
-        $precio_calculado = $this->precios[$sala->nombre] ?? 80.00;
-
-        Funcion::create([
-            'pelicula_id' => $request->pelicula_id,
-            'sala_id'     => $request->sala_id,
-            'fecha'       => $request->fecha,
-            'hora'        => $hora_formateada,
-            'precio'      => $precio_calculado, // ¡AQUÍ GUARDAMOS EL PRECIO!
-        ]);
-
-        return redirect()->route('funciones.index')->with('success', '¡Función programada con éxito en la cartelera!');
+        Funcion::create($request->all());
+        return redirect()->route('funciones.index')->with('success', 'Función programada con éxito.');
     }
 
-    public function edit(Funcion $funcion)
+    public function edit($id)
     {
-        $peliculas = Pelicula::whereIn('estatus', ['Estreno', 'Cartelera'])->get(); 
-        $salas = Sala::with('sucursal')->where('estatus', 'Disponible')->get(); 
-        
-        return view('admin.funciones.edit', compact('funcion', 'peliculas', 'salas'));
+        $funcion = Funcion::findOrFail($id);
+        return view('admin.funciones.edit', compact('funcion'));
     }
 
-    public function update(Request $request, Funcion $funcion)
+    public function update(Request $request, $id)
     {
         $request->validate([
-            'pelicula_id' => 'required|exists:peliculas,id',
-            'sala_id'     => 'required|exists:salas,id',
-            'fecha'       => 'required|date',
-            'hora'        => 'required'
+            'pelicula_id' => 'required|integer',
+            'sala_id' => 'required|exists:salas,id',
+            'fecha' => 'required|date',
+            'hora' => 'required',
+            'precio' => 'required|numeric'
         ]);
 
-        $hora_formateada = Carbon::parse($request->hora)->format('H:i:s');
+        $funcion = Funcion::findOrFail($id);
+        $funcion->update($request->all());
 
-        $conflicto = Funcion::where('sala_id', $request->sala_id)
-                            ->where('fecha', $request->fecha)
-                            ->where('hora', $hora_formateada)
-                            ->where('id', '!=', $funcion->id)
-                            ->first();
-
-        if ($conflicto) {
-            return redirect()->back()
-                   ->with('error', 'Error: Choque de horarios. La sala ya está ocupada.')
-                   ->withInput();
-        }
-
-        // Volvemos a calcular el precio por si el empleado cambió de sala
-        $sala = Sala::findOrFail($request->sala_id);
-        $precio_calculado = $this->precios[$sala->nombre] ?? 80.00;
-
-        $funcion->update([
-            'pelicula_id' => $request->pelicula_id,
-            'sala_id'     => $request->sala_id,
-            'fecha'       => $request->fecha,
-            'hora'        => $hora_formateada,
-            'precio'      => $precio_calculado, // ¡AQUÍ ACTUALIZAMOS EL PRECIO!
-        ]);
-
-        return redirect()->route('funciones.index')->with('success', 'Función actualizada correctamente.');
+        return redirect()->route('funciones.index')->with('success', 'Horario de función actualizado.');
     }
 
-    public function destroy(Funcion $funcion)
+    public function destroy($id)
     {
+        $funcion = Funcion::findOrFail($id);
         $funcion->delete();
-        return redirect()->route('funciones.index')->with('success', 'Función cancelada y retirada de la cartelera.');
+
+        return redirect()->route('funciones.index')->with('success', 'Función eliminada de la cartelera.');
     }
 }

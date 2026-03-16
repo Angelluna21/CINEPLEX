@@ -7,7 +7,7 @@ use Illuminate\Http\Request;
 use App\Models\Pelicula;
 use App\Models\Sucursal;
 use App\Models\User;
-use App\Models\Genre; // O el nombre que tenga tu modelo de géneros
+use App\Models\Genre; 
 
 // CONTROLADORES
 use App\Http\Controllers\PeliculaController;
@@ -71,9 +71,10 @@ Route::prefix('admin')->group(function () {
     // Módulo de Salas
     Route::resource('salas', SalaController::class)->names('salas');
 
-    // Módulo de Funciones
-    Route::resource('funciones', FuncionController::class)->names('funciones');
-
     // Módulo de Usuarios
     Route::resource('usuarios', UserController::class)->names('usuarios');
+
+    // Módulo de Funciones (¡Corregido y estandarizado!)
+    Route::resource('funciones', FuncionController::class)->names('funciones');
+    
 });
