@@ -17,4 +17,10 @@ class Sala extends Model
     {
         return $this->belongsTo(Sucursal::class, 'sucursal_id');
     }
+
+    public function funciones()
+{
+    // Esto le dice a Laravel que use el modelo Funcion (que ya tiene la tabla 'funciones' definida)
+    return $this->hasMany(Funcion::class, 'sala_id');
+}
 }

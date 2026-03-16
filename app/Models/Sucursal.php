@@ -9,13 +9,12 @@ class Sucursal extends Model
 {
     use HasFactory;
 
-    // LTabla sucursal
     protected $table = 'sucursales';
+    
 
-    // Campos asignables
-    protected $fillable = ['nombre'];
+    // Debes agregar 'ubicacion' aquí:
+    protected $fillable = ['nombre', 'ubicacion'];
 
-    // Tabala salas
     public function salas()
     {
         return $this->hasMany(Sala::class);

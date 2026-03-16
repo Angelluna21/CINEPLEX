@@ -25,14 +25,33 @@
             </div>
         @endif
 
-        <div class="flex justify-between items-center mb-8">
+        <div class="flex flex-col md:flex-row justify-between items-center gap-4 mb-8">
             <div>
                 <h1 class="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#42A5F5] to-[#E91E63]">Sucursales</h1>
                 <p class="text-gray-400 text-sm mt-1">Gestión de complejos físicos y ubicaciones</p>
             </div>
+
+            <form id="searchForm" action="{{ route('sucursales.index') }}" method="GET" class="flex w-full md:w-auto gap-2">
+                <div class="relative w-full md:w-64">
+                    <i class="bi bi-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-500"></i>
+                    <input type="text" 
+                           id="searchInput"
+                           name="buscar" 
+                           value="{{ $buscar ?? '' }}" 
+                           placeholder="Buscar sucursal..." 
+                           autocomplete="off"
+                           class="w-full bg-[#0B0F19] border border-gray-700 rounded-full py-2 pl-10 pr-4 text-sm focus:border-[#42A5F5] outline-none transition-all">
+                </div>
+                @if(request('buscar'))
+                    <a href="{{ route('sucursales.index') }}" class="bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white p-2 rounded-full transition-all" title="Limpiar búsqueda">
+                        <i class="bi bi-x-lg"></i>
+                    </a>
+                @endif
+            </form>
+
             <a href="{{ route('sucursales.create') }}" class="bg-[#E91E63] hover:bg-pink-600 text-white px-6 py-2.5 rounded-full font-bold transition-all shadow-lg hover:scale-105 flex items-center gap-2">
                 <i class="bi bi-plus-lg"></i>
-                Nueva Sucursal
+                Nueva
             </a>
         </div>
 
@@ -45,7 +64,7 @@
                         <th class="p-4 text-center">Acciones</th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody id="tableBody">
                     @forelse($sucursales as $sucursal)
                     <tr class="border-b border-gray-800 hover:bg-gray-800/30 transition-colors">
                         <td class="p-4 text-gray-500 font-mono">#{{ $sucursal->id }}</td>
@@ -80,6 +99,22 @@
             </table>
         </div>
     </div>
+
+    <script>
+        document.getElementById('searchInput').addEventListener('keyup', function() {
+            let filter = this.value.toLowerCase();
+            let rows = document.querySelectorAll('#tableBody tr');
+
+            rows.forEach(row => {
+                // Obtenemos el texto del nombre (segunda celda)
+                let nameElement = row.querySelector('td:nth-child(2)');
+                if (nameElement) {
+                    let text = nameElement.textContent.toLowerCase();
+                    row.style.display = text.includes(filter) ? "" : "none";
+                }
+            });
+        });
+    </script>
 
 </body>
 </html>
