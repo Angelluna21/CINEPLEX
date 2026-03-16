@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth; // <-- IMPORTANTE: Esta línea evita errores
 
 // MODELOS
 use App\Models\Pelicula;
@@ -52,29 +53,27 @@ Route::get('/admin', function () {
     $countPeliculas = Pelicula::count();
     $countSucursales = Sucursal::count();
     
-    // Pasamos las variables a la vista para que no den error
     return view('admin.index', compact('countUsuarios', 'countPeliculas', 'countSucursales'));
 })->name('admin.dashboard');
 
-// Agrupamos todo bajo 'admin/' para que sea ordenado
+// Agrupamos bajo 'admin/'
 Route::prefix('admin')->group(function () {
     
-    // Módulo de Películas
     Route::resource('peliculas', PeliculaController::class)->names('peliculas');
-
-    // Módulo de Géneros
     Route::resource('generos', GenreController::class)->names('generos');
-
-    // Módulo de Sucursales
     Route::resource('sucursales', SucursalController::class)->names('sucursales');
-
-    // Módulo de Salas
     Route::resource('salas', SalaController::class)->names('salas');
-
-    // Módulo de Usuarios
     Route::resource('usuarios', UserController::class)->names('usuarios');
-
-    // Módulo de Funciones (¡Corregido y estandarizado!)
     Route::resource('funciones', FuncionController::class)->names('funciones');
     
 });
+
+// ==========================================
+// RUTA DE CIERRE DE SESIÓN (FUERA DEL PREFIJO ADMIN)
+// ==========================================
+Route::post('/logout', function (Request $request) {
+    Auth::logout();
+    $request->session()->invalidate();
+    $request->session()->regenerateToken();
+    return redirect('/'); 
+})->name('logout');

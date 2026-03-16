@@ -22,13 +22,23 @@
             <h1 class="text-3xl font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-[#42A5F5] to-[#E91E63]">
                 CINEPLEX <span class="text-xs font-light text-gray-500 tracking-widest uppercase ml-2">Panel Administrativo</span>
             </h1>
-            <div class="flex items-center gap-4">
-                <span class="text-sm text-gray-400">Bienvenida, <span class="text-white font-bold">Sofía</span></span>
-                <div class="w-10 h-10 rounded-full bg-gradient-to-br from-pink-500 to-blue-500 p-0.5 shadow-lg">
-                    <div class="w-full h-full rounded-full bg-[#0B0F19] flex items-center justify-center">
-                        <i class="bi bi-person-fill text-gray-300"></i>
+            <div class="flex items-center gap-6">
+                <div class="flex items-center gap-3">
+                    <span class="text-sm text-gray-400">Bienvenida, <span class="text-white font-bold">Sofía</span></span>
+                    <div class="w-10 h-10 rounded-full bg-gradient-to-br from-pink-500 to-blue-500 p-0.5 shadow-lg">
+                        <div class="w-full h-full rounded-full bg-[#0B0F19] flex items-center justify-center">
+                            <i class="bi bi-person-fill text-gray-300"></i>
+                        </div>
                     </div>
                 </div>
+
+                <form method="POST" action="{{ route('logout') }}" class="inline">
+                    @csrf
+                    <button type="submit" class="group flex items-center gap-2 bg-red-500/10 hover:bg-red-500 text-red-500 hover:text-white px-4 py-2 rounded-xl border border-red-500/20 transition-all font-bold text-sm">
+                        <i class="bi bi-box-arrow-left text-lg"></i>
+                        <span class="hidden md:inline">Cerrar Sesión</span>
+                    </button>
+                </form>
             </div>
         </div>
     </nav>
