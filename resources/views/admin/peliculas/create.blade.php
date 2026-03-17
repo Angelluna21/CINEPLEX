@@ -113,7 +113,11 @@
 </label>
                 </div>
             </div>
-
+            <div>
+    <label for="imagen_url" class="block text-sm font-semibold text-gray-400 mb-1">URL del Póster (Imagen)</label>
+    <input type="url" name="imagen_url" id="imagen_url" value="{{ old('imagen_url', $pelicula->imagen_url ?? '') }}" placeholder="https://ejemplo.com/poster.jpg" 
+        class="block w-full bg-[#0B0F19] border border-gray-700 rounded-md shadow-sm py-2 px-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium transition-colors">
+</div>
             <div>
                 <label for="sinopsis" class="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Sinopsis <span class="text-red-500">*</span></label>
                 <textarea name="sinopsis" id="sinopsis" rows="4" 

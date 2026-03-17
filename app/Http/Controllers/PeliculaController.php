@@ -31,6 +31,7 @@ class PeliculaController extends Controller
             'formato' => ['required', 'string'],
             'estatus' => ['required', 'string'],
             'sinopsis' => ['required', 'string', 'min:10'],
+            'imagen_url' => ['nullable', 'url'],
         ], [
             'titulo.unique' => '¡Esta película ya se encuentra registrada en la cartelera!',
         ]);

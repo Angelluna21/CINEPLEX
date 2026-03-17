@@ -43,6 +43,47 @@
                     <input type="number" name="duracion" id="duracion" value="{{ old('duracion', $pelicula->duracion) }}" 
                         class="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-black font-medium" required>
                 </div>
+
+                <div>
+                    <label for="genero" class="block text-sm font-semibold text-gray-700 mb-1 text-black">Género</label>
+                    <select name="genero" id="genero" class="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-black font-medium cursor-pointer" required>
+                        <option value="">Seleccione...</option>
+                        @foreach($generos as $genero)
+                            @php $nombreGenero = $genero->nombre ?? $genero->name; @endphp
+                            <option value="{{ $nombreGenero }}" {{ old('genero', $pelicula->genero) == $nombreGenero ? 'selected' : '' }}>
+                                {{ $nombreGenero }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <div>
+                    <label for="idioma" class="block text-sm font-semibold text-gray-700 mb-1 text-black">Idioma</label>
+                    <select name="idioma" id="idioma" class="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-black font-medium cursor-pointer" required>
+                        <option value="Español Latino" {{ old('idioma', $pelicula->idioma) == 'Español Latino' ? 'selected' : '' }}>Español Latino</option>
+                        <option value="Subtitulada" {{ old('idioma', $pelicula->idioma) == 'Subtitulada' ? 'selected' : '' }}>Subtitulada (DOB)</option>
+                        <option value="Inglés" {{ old('idioma', $pelicula->idioma) == 'Inglés' ? 'selected' : '' }}>Inglés</option>
+                    </select>
+                </div>
+
+                <div class="md:col-span-2">
+                    <label for="formato" class="block text-sm font-semibold text-gray-700 mb-1 text-black">Formato</label>
+                    <select name="formato" id="formato" class="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-black font-medium cursor-pointer" required>
+                        <option value="2D" {{ old('formato', $pelicula->formato) == '2D' ? 'selected' : '' }}>2D</option>
+                        <option value="3D" {{ old('formato', $pelicula->formato) == '3D' ? 'selected' : '' }}>3D</option>
+                        <option value="4D" {{ old('formato', $pelicula->formato) == '4D' ? 'selected' : '' }}>4D</option>
+                        <option value="IMAX" {{ old('formato', $pelicula->formato) == 'IMAX' ? 'selected' : '' }}>IMAX</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="mt-6">
+                <label for="imagen_url" class="block text-sm font-semibold text-gray-700 mb-1 text-black">URL del Póster (Imagen)</label>
+                <input type="url" name="imagen_url" id="imagen_url" value="{{ old('imagen_url', $pelicula->imagen_url ?? '') }}" placeholder="https://ejemplo.com/poster.jpg" 
+                    class="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-black font-medium">
+                @error('imagen_url')
+                    <p class="text-red-600 text-xs mt-1 font-bold">{{ $message }}</p>
+                @enderror
             </div>
 
             <div>

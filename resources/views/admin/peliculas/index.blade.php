@@ -35,8 +35,13 @@
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             @forelse($peliculas as $pelicula)
             <div class="bg-[#0B0F19] p-5 rounded-2xl border border-gray-800 hover:border-pink-500/50 transition-all group">
+                
                 <div class="aspect-[2/3] bg-gray-900 rounded-xl mb-4 flex items-center justify-center border border-gray-800 group-hover:bg-gray-800 transition-colors relative overflow-hidden">
-                    <i class="bi bi-film text-gray-700 text-6xl"></i>
+                    @if($pelicula->imagen_url)
+                        <img src="{{ $pelicula->imagen_url }}" alt="Póster" class="w-full h-full object-cover">
+                    @else
+                        <i class="bi bi-film text-gray-700 text-6xl"></i>
+                    @endif
                 </div>
                 <h3 class="text-xl font-bold mb-1">{{ $pelicula->titulo }}</h3>
                 <div class="flex gap-2 mb-3">

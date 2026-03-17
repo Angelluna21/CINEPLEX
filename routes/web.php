@@ -2,7 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth; // <-- IMPORTANTE: Esta línea evita errores
+use Illuminate\Support\Facades\Auth;
 
 // MODELOS
 use App\Models\Pelicula;
@@ -17,6 +17,14 @@ use App\Http\Controllers\SalaController;
 use App\Http\Controllers\SucursalController;
 use App\Http\Controllers\FuncionController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\AuthController; // <-- AÑADIDO: Controlador de Autenticación
+
+// ==========================================
+// RUTAS DE AUTENTICACIÓN (LOGIN / LOGOUT)
+// ==========================================
+Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
+Route::post('/login', [AuthController::class, 'login'])->name('login.post');
+Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 // ==========================================
 // VISTAS DEL CLIENTE (CARTELERA PÚBLICA)
@@ -44,38 +52,32 @@ Route::get('/', function (Request $request) {
 });
 
 // ==========================================
-// PANEL ADMINISTRATIVO (EMPLEADOS)
+// PANEL ADMINISTRATIVO (PROTEGIDO CON CANDADO)
 // ==========================================
 
-// Ruta principal del Admin con conteos para las tarjetas
-Route::get('/admin', function () {
-    $countUsuarios = User::count();
-    $countPeliculas = Pelicula::count();
-    $countSucursales = Sucursal::count();
+Route::middleware(['auth'])->group(function () {
     
-    return view('admin.index', compact('countUsuarios', 'countPeliculas', 'countSucursales'));
-})->name('admin.dashboard');
+    // Ruta principal del Admin con conteos para las tarjetas
+    Route::get('/admin', function () {
+        $countUsuarios = User::count();
+        $countPeliculas = Pelicula::count();
+        $countSucursales = Sucursal::count();
+        
+        return view('admin.index', compact('countUsuarios', 'countPeliculas', 'countSucursales'));
+    })->name('admin.dashboard');
 
-// Agrupamos bajo 'admin/'
-Route::prefix('admin')->group(function () {
-    
-    Route::resource('peliculas', PeliculaController::class)->names('peliculas');
-    Route::resource('generos', GenreController::class)->parameters([
-        'generos' => 'genre'
-    ]);
-    Route::resource('sucursales', SucursalController::class)->names('sucursales');
-    Route::resource('salas', SalaController::class)->names('salas');
-    Route::resource('usuarios', UserController::class)->names('usuarios');
-    Route::resource('funciones', FuncionController::class)->names('funciones');
+    // Agrupamos bajo 'admin/'
+    Route::prefix('admin')->group(function () {
+        
+        Route::resource('peliculas', PeliculaController::class)->names('peliculas');
+        Route::resource('generos', GenreController::class)->parameters([
+            'generos' => 'genre'
+        ]);
+        Route::resource('sucursales', SucursalController::class)->names('sucursales');
+        Route::resource('salas', SalaController::class)->names('salas');
+        Route::resource('usuarios', UserController::class)->names('usuarios');
+        Route::resource('funciones', FuncionController::class)->names('funciones');
+        
+    });
     
 });
-
-// ==========================================
-// RUTA DE CIERRE DE SESIÓN (FUERA DEL PREFIJO ADMIN)
-// ==========================================
-Route::post('/logout', function (Request $request) {
-    Auth::logout();
-    $request->session()->invalidate();
-    $request->session()->regenerateToken();
-    return redirect('/'); 
-})->name('logout');

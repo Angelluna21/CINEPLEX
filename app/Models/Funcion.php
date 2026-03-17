@@ -9,6 +9,10 @@ class Funcion extends Model
 {
     use HasFactory;
 
+<<<<<<< HEAD
+=======
+    // ESTO CORRIGE EL ERROR DE PLURALIZACIÓN (¡Perfectamente aplicado!)
+>>>>>>> a706bc7 (feat: login completo, protección de rutas y refactor de sucursales)
     protected $table = 'funciones';
 
     protected $fillable = [
@@ -19,14 +23,24 @@ class Funcion extends Model
         'precio'
     ];
 
+<<<<<<< HEAD
     // ESTO ES LO QUE FALTA:
     public function pelicula()
     {
         return $this->belongsTo(Pelicula::class, 'pelicula_id');
     }
 
+=======
+    // Relación con Sala (Ya la tenías, excelente)
+>>>>>>> a706bc7 (feat: login completo, protección de rutas y refactor de sucursales)
     public function sala()
     {
         return $this->belongsTo(Sala::class, 'sala_id');
+    }
+
+    // RELACIÓN AÑADIDA: Para poder traer los datos de la película de esta función
+    public function pelicula()
+    {
+        return $this->belongsTo(Pelicula::class, 'pelicula_id');
     }
 }

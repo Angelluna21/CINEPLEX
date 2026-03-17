@@ -17,6 +17,11 @@ class Pelicula extends Model
         'estatus',
         'duracion',
         'idioma',
-        'formato'
+        'formato',
+        'imagen_url'
     ];
+    public function funciones()
+    {
+        return $this->hasMany(Funcion::class);
+    }
 }
