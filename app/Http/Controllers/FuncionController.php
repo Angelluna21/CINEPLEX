@@ -23,7 +23,12 @@ class FuncionController extends Controller
         // EL CANDADO: Solo traemos las salas que estén 'Disponible'
         $salas = Sala::where('estatus', 'Disponible')->get(); 
 
-        return view('admin.funciones.create', compact('peliculas', 'salas'));
+        // Creamos la fecha de hoy (mínima) y la fecha máxima (1 mes en el futuro)
+        $minDate = \Carbon\Carbon::now()->format('Y-m-d');
+        $maxDate = \Carbon\Carbon::now()->addMonth()->format('Y-m-d'); // <-- AQUÍ ESTÁ LA NUEVA VARIABLE
+
+        // IMPORTANTE: Agregamos 'maxDate' al compact para que viaje a la vista
+        return view('admin.funciones.create', compact('peliculas', 'salas', 'minDate', 'maxDate'));
     }
 
     public function store(Request $request)
