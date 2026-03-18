@@ -61,6 +61,7 @@
                         <th class="p-4">Nombre de la Sala</th>
                         <th class="p-4">Sucursal</th>
                         <th class="p-4">Capacidad</th>
+                        <th class="p-4">Estatus</th>
                         <th class="p-4 text-center">Acciones</th>
                     </tr>
                 </thead>
@@ -71,6 +72,21 @@
                         <td class="p-4 font-bold text-gray-200 sala-name">{{ $sala->nombre }}</td>
                         <td class="p-4 text-gray-400 sala-sucursal">{{ $sala->sucursal->nombre ?? 'N/A' }}</td>
                         <td class="p-4 text-cyan-400 font-bold">{{ $sala->capacidad }} asientos</td>
+                        
+                        <td class="p-4 whitespace-nowrap">
+                            @if($sala->estatus === 'Disponible')
+                                <span class="inline-flex items-center gap-1.5 py-1 px-3 rounded-full text-xs font-bold bg-green-500/10 text-green-400 border border-green-500/30 shadow-[0_0_10px_rgba(34,197,94,0.1)]">
+                                    <span class="w-2 h-2 rounded-full bg-green-400 shadow-[0_0_5px_#4ade80] animate-pulse"></span>
+                                    Disponible
+                                </span>
+                            @else
+                                <span class="inline-flex items-center gap-1.5 py-1 px-3 rounded-full text-xs font-bold bg-red-500/10 text-red-400 border border-red-500/30 shadow-[0_0_10px_rgba(239,68,68,0.1)]">
+                                    <span class="w-2 h-2 rounded-full bg-red-500"></span>
+                                    Mantenimiento
+                                </span>
+                            @endif
+                        </td>
+
                         <td class="p-4 text-center">
                             <div class="flex justify-center gap-4">
                                 <a href="{{ route('salas.edit', $sala->id) }}" class="text-blue-400 hover:text-blue-200">
@@ -89,7 +105,7 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="5" class="p-12 text-center text-gray-500 italic">No hay salas registradas.</td>
+                        <td colspan="6" class="p-12 text-center text-gray-500 italic">No hay salas registradas.</td>
                     </tr>
                     @endforelse
                 </tbody>
