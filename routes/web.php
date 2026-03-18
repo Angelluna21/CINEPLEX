@@ -81,6 +81,7 @@ Route::middleware(['auth'])->group(function () {
     // Agrupamos bajo 'admin/'
     Route::prefix('admin')->group(function () {
         
+        Route::get('tmdb/search', [PeliculaController::class, 'searchTmdb'])->name('tmdb.search');
         Route::resource('peliculas', PeliculaController::class)->names('peliculas');
         Route::resource('generos', GenreController::class)->parameters([
             'generos' => 'genre'

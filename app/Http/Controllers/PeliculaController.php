@@ -23,6 +23,55 @@ class PeliculaController extends Controller
         return view('admin.peliculas.create', compact('generos'));
     }
 
+    public function searchTmdb(Request $request)
+    {
+        $query = $request->get('query');
+        $apiKey = env('TMDB_API_KEY');
+        
+        if (!$apiKey) {
+            return response()->json(['error' => 'API Key no configurada'], 500);
+        }
+
+        try {
+            $searchResponse = Http::get("https://api.themoviedb.org/3/search/movie", [
+                'api_key' => $apiKey,
+                'query' => $query,
+                'language' => 'es-MX',
+                'include_adult' => 'false'
+            ]);
+
+            if ($searchResponse->successful() && !empty($searchResponse->json('results'))) {
+                $movie = $searchResponse->json('results')[0];
+                
+                $detailsResponse = Http::get("https://api.themoviedb.org/3/movie/" . $movie['id'], [
+                    'api_key' => $apiKey,
+                    'language' => 'es-MX'
+                ]);
+
+                $details = $detailsResponse->successful() ? $detailsResponse->json() : [];
+
+                $posterUrl = $movie['poster_path'] ? "https://image.tmdb.org/t/p/w500" . $movie['poster_path'] : '';
+                
+                $generosTMDB = $details['genres'] ?? [];
+                $nombresGeneros = array_column($generosTMDB, 'name');
+                $generoPrincipal = !empty($nombresGeneros) ? $nombresGeneros[0] : '';
+
+                return response()->json([
+                    'titulo' => $details['title'] ?? $movie['title'],
+                    'sinopsis' => $details['overview'] ?? $movie['overview'],
+                    'duracion' => $details['runtime'] ?? '',
+                    'imagen_url' => $posterUrl,
+                    'genero' => $generoPrincipal
+                ]);
+            }
+            
+            return response()->json(['error' => 'No se encontraron resultados en TMDB'], 404);
+            
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Error al conectar con TMDB'], 500);
+        }
+    }
+
     private function downloadAndSavePoster($query, $existingUrl = null)
     {
         // 1. Si el usuario proporcionó una URL manualmente (y no es una URL local nuestra), priorizarla

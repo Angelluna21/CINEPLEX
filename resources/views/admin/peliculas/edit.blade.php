@@ -18,8 +18,15 @@
 
             <div>
                 <label for="titulo" class="block text-sm font-semibold text-gray-700 mb-1 text-black">Título de la Película</label>
-                <input type="text" name="titulo" id="titulo" value="{{ old('titulo', $pelicula->titulo) }}" 
-                    class="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-black font-medium" required>
+                <div class="flex gap-2">
+                    <input type="text" name="titulo" id="titulo" value="{{ old('titulo', $pelicula->titulo) }}" 
+                        class="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-black font-medium" required>
+                    <button type="button" id="btnBuscarTMDB" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md shadow-sm transition-all whitespace-nowrap">
+                        <svg class="w-4 h-4 inline-block mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                        Buscar en TMDB
+                    </button>
+                </div>
+
                 @error('titulo')
                     <p class="text-red-600 text-xs mt-1 font-bold">{{ $message }}</p>
                 @enderror
@@ -122,4 +129,57 @@
         </form>
     </div>
 </div>
+
+<script>
+    document.getElementById('btnBuscarTMDB').addEventListener('click', async function() {
+        const titulo = document.getElementById('titulo').value;
+        if (!titulo) {
+            alert('Por favor, ingresa el título de la película para buscar en TMDB.');
+            return;
+        }
+
+        const btn = this;
+        const oHtml = btn.innerHTML;
+        btn.innerHTML = '<svg class="w-4 h-4 inline-block mr-1 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg> Buscando...';
+        btn.disabled = true;
+
+        try {
+            const response = await fetch(`{{ route('tmdb.search') }}?query=${encodeURIComponent(titulo)}`);
+            const data = await response.json();
+
+            if (response.ok) {
+                // Autocompletar campos
+                document.getElementById('titulo').value = data.titulo || titulo;
+                document.getElementById('sinopsis').value = data.sinopsis || '';
+                
+                if (data.duracion) {
+                    document.getElementById('duracion').value = data.duracion;
+                }
+                
+                if (data.imagen_url) {
+                    document.getElementById('imagen_url').value = data.imagen_url;
+                }
+                
+                if (data.genero) {
+                    const select = document.getElementById('genero');
+                    for (let i = 0; i < select.options.length; i++) {
+                        if (select.options[i].text.toLowerCase().includes(data.genero.toLowerCase()) || 
+                            data.genero.toLowerCase().includes(select.options[i].text.toLowerCase())) {
+                            select.selectedIndex = i;
+                            break;
+                        }
+                    }
+                }
+            } else {
+                alert(data.error || 'Error al buscar en TMDB');
+            }
+        } catch (error) {
+            console.error(error);
+            alert('Hubo un error de conexión con el servidor.');
+        } finally {
+            btn.innerHTML = oHtml;
+            btn.disabled = false;
+        }
+    });
+</script>
 @endsection

@@ -22,9 +22,14 @@
 
             <div>
                 <label for="titulo" class="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Título de la Película <span class="text-red-500">*</span></label>
-                <input type="text" name="titulo" id="titulo" value="{{ old('titulo') }}" 
-                    class="block w-full bg-[#0B0F19] border border-gray-700 rounded-xl py-3 px-4 text-white focus:outline-none focus:ring-1 focus:ring-[#E91E63] focus:border-[#E91E63] transition-all shadow-inner @error('titulo') border-red-500 ring-1 ring-red-500 @enderror"
-                    placeholder="Escribe el nombre aquí..." required>
+                <div class="flex gap-2">
+                    <input type="text" name="titulo" id="titulo" value="{{ old('titulo') }}" 
+                        class="block w-full bg-[#0B0F19] border border-gray-700 rounded-xl py-3 px-4 text-white focus:outline-none focus:ring-1 focus:ring-[#E91E63] focus:border-[#E91E63] transition-all shadow-inner @error('titulo') border-red-500 ring-1 ring-red-500 @enderror"
+                        placeholder="Escribe el nombre aquí..." required>
+                    <button type="button" id="btnBuscarTMDB" class="bg-gradient-to-r from-[#42A5F5] to-blue-600 hover:scale-105 text-white font-bold py-3 px-6 rounded-xl shadow-[0_0_15px_rgba(66,165,245,0.3)] transition-all whitespace-nowrap">
+                        <i class="bi bi-search mr-2"></i>Buscar en TMDB
+                    </button>
+                </div>
                 
                 @error('titulo')
                     <div class="mt-2 text-red-400 text-sm flex items-center gap-2 bg-red-500/10 p-3 rounded-lg border border-red-500/20 font-bold">
@@ -141,4 +146,61 @@
         </form>
     </div>
 </div>
+
+<script>
+    document.getElementById('btnBuscarTMDB').addEventListener('click', async function() {
+        const titulo = document.getElementById('titulo').value;
+        if (!titulo) {
+            alert('Por favor, ingresa el título de la película para buscar en TMDB.');
+            return;
+        }
+
+        const btn = this;
+        const oHtml = btn.innerHTML;
+        btn.innerHTML = '<i class="bi bi-arrow-repeat animate-spin mr-2" style="display:inline-block; animation: spin 2s linear infinite;"></i>Buscando...';
+        btn.disabled = true;
+
+        try {
+            const response = await fetch(`{{ route('tmdb.search') }}?query=${encodeURIComponent(titulo)}`);
+            const data = await response.json();
+
+            if (response.ok) {
+                // Autocompletar campos
+                document.getElementById('titulo').value = data.titulo || titulo;
+                document.getElementById('sinopsis').value = data.sinopsis || '';
+                
+                if (data.duracion) {
+                    document.getElementById('duracion').value = data.duracion;
+                }
+                
+                if (data.imagen_url) {
+                    document.getElementById('imagen_url').value = data.imagen_url;
+                }
+                
+                if (data.genero) {
+                    const select = document.getElementById('genero');
+                    for (let i = 0; i < select.options.length; i++) {
+                        if (select.options[i].text.toLowerCase().includes(data.genero.toLowerCase()) || 
+                            data.genero.toLowerCase().includes(select.options[i].text.toLowerCase())) {
+                            select.selectedIndex = i;
+                            break;
+                        }
+                    }
+                }
+            } else {
+                alert(data.error || 'Error al buscar en TMDB');
+            }
+        } catch (error) {
+            console.error(error);
+            alert('Hubo un error de conexión con el servidor.');
+        } finally {
+            btn.innerHTML = oHtml;
+            btn.disabled = false;
+        }
+    });
+</script>
+
+<style>
+    @keyframes spin { 100% { transform: rotate(360deg); } }
+</style>
 @endsection
