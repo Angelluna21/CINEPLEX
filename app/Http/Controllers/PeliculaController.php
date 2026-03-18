@@ -73,60 +73,38 @@ class PeliculaController extends Controller
         }
     }
 
-    private function downloadAndSavePoster($titulo, $existingUrl = null)
+    /**
+     * Procesa la URL del póster. Prioriza links externos de TMDB.
+     */
+    private function getPosterUrl($titulo, $existingUrl = null)
     {
-        // 1. Si el usuario proporcionó una URL manualmente (y no es una URL local nuestra), intentamos descargarla
-        if ($existingUrl && !str_starts_with($existingUrl, '/storage/')) {
-            try {
-                $response = Http::timeout(10)->get($existingUrl);
-                if ($response->successful()) {
-                    $imageContent = $response->body();
-                    $extension = 'jpg'; // Por defecto, podrías intentar detectarlo de headers
-                    
-                    $filename = Str::slug($titulo) . '-local-' . time() . '.' . $extension;
-                    Storage::disk('public')->put('portadas/' . $filename, $imageContent);
-                    return '/storage/portadas/' . $filename;
-                }
-            } catch (\Exception $e) {
-                \Log::warning("Error al descargar póster manual para '{$titulo}': " . $e->getMessage());
-            }
+        // 1. Si ya tenemos una URL externa de TMDB o una URL manual válida, la usamos directamente.
+        if ($existingUrl && (str_contains($existingUrl, 'tmdb.org') || str_starts_with($existingUrl, 'http'))) {
+            return $existingUrl;
         }
 
-        // 2. Si no hay URL manual o falló la descarga, intentamos buscar en TMDB automáticamente
+        // 2. Si no hay URL, intentamos buscarla en TMDB por el título
         $apiKey = env('TMDB_API_KEY');
         if ($apiKey) {
             try {
-                $searchResponse = Http::get("https://api.themoviedb.org/3/search/movie", [
+                $response = Http::get("https://api.themoviedb.org/3/search/movie", [
                     'api_key' => $apiKey,
                     'query' => $titulo,
                     'language' => 'es-MX',
                 ]);
 
-                if ($searchResponse->successful() && !empty($searchResponse->json('results'))) {
-                    $posterPath = $searchResponse->json('results')[0]['poster_path'];
-                    
+                if ($response->successful() && !empty($response->json('results'))) {
+                    $posterPath = $response->json('results')[0]['poster_path'];
                     if ($posterPath) {
-                        $imageUrl = "https://image.tmdb.org/t/p/w500" . $posterPath;
-                        $imageResponse = Http::get($imageUrl);
-                        
-                        if ($imageResponse->successful()) {
-                            $filename = Str::slug($titulo) . '-' . time() . '.jpg';
-                            Storage::disk('public')->put('portadas/' . $filename, $imageResponse->body());
-                            return '/storage/portadas/' . $filename;
-                        }
+                        return "https://image.tmdb.org/t/p/w500" . $posterPath;
                     }
                 }
             } catch (\Exception $e) {
-                \Log::error("Error en fallback de TMDB para '{$titulo}': " . $e->getMessage());
+                \Log::error("Error al obtener poster de TMDB para '{$titulo}': " . $e->getMessage());
             }
         }
 
-        // 3. Fallback: Si ya era una URL local (/storage/...), devolverla intacta
-        if ($existingUrl && str_starts_with($existingUrl, '/storage/')) {
-            return $existingUrl;
-        }
-
-        return null;
+        return $existingUrl;
     }
 
     public function store(Request $request)
@@ -146,7 +124,7 @@ class PeliculaController extends Controller
         ]);
 
         $data = $request->all();
-        $data['imagen_url'] = $this->downloadAndSavePoster($request->titulo, $request->imagen_url);
+        $data['imagen_url'] = $this->getPosterUrl($request->titulo, $request->imagen_url);
 
         Pelicula::create($data);
 
@@ -175,11 +153,9 @@ class PeliculaController extends Controller
 
         $data = $request->all();
         
-        if ($request->titulo !== $pelicula->titulo || $request->filled('imagen_url') && $request->imagen_url !== $pelicula->imagen_url) {
-            $nuevaPortada = $this->downloadAndSavePoster($request->titulo, $request->imagen_url);
-            if ($nuevaPortada) {
-                $data['imagen_url'] = $nuevaPortada;
-            }
+        // Si el título cambió o se proporcionó una nueva URL, procesamos la URL del póster
+        if ($request->titulo !== $pelicula->titulo || ($request->filled('imagen_url') && $request->imagen_url !== $pelicula->imagen_url)) {
+            $data['imagen_url'] = $this->getPosterUrl($request->titulo, $request->imagen_url);
         } else {
             $data['imagen_url'] = $pelicula->imagen_url;
         }
