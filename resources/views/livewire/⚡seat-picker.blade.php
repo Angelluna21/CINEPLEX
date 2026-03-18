@@ -2,7 +2,10 @@
 
 use Livewire\Component;
 use Livewire\Attributes\On;
-use App\Models\Funcion; // IMPORTANTE: Traemos el modelo Funcion
+use App\Models\Funcion;
+use App\Models\Asiento;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 
 new class extends Component
 {
@@ -14,64 +17,113 @@ new class extends Component
     public $tipoSala = ''; // Nombre de la sala (Tradicional, IMAX, 4D...)
 
     // SE EJECUTA AL INICIAR EL COMPONENTE
+    // SE EJECUTA AL INICIAR EL COMPONENTE
     public function mount($funcionId)
     {
         $this->funcionId = $funcionId;
-        $this->sessionId = session()->getId(); // Obtenemos el ID de sesión del usuario
+        $this->sessionId = session()->getId();
         
-        // 1. Buscamos la función y su sala para saber la capacidad real
         $funcion = Funcion::with('sala')->find($this->funcionId);
-        
-        // Si no la encuentra por error, ponemos 60 por defecto
-        $capacidad = $funcion ? $funcion->sala->capacidad : 60;
-        $this->tipoSala = $funcion ? $funcion->sala->nombre : 'Normal';
+        if (!$funcion || !$funcion->sala) {
+            $this->tipoSala = 'Normal';
+            return;
+        }
 
-        // 2. Generamos el mapa basado en la capacidad de la sala
-        $this->generarMapaDeAsientos($capacidad);
+        $this->tipoSala = $funcion->sala->nombre;
+        $capacidad = $funcion->sala->capacidad ?: 60;
+        
+        $this->generarMapaDeAsientos($funcion->sala->id, $capacidad);
     }
 
-    // LÓGICA MATEMÁTICA PARA DIBUJAR LA SALA
-    public function generarMapaDeAsientos($capacidad)
+    // LÓGICA CONECTADA A LA BASE DE DATOS
+    public function generarMapaDeAsientos($salaId, $capacidad)
     {
-        // Determinamos cuántas columnas (asientos) tendrá cada fila
-        $asientosPorFila = 10; // Predeterminado para Tradicional (100 asientos) y 4D (60 asientos)
-        
-        if ($capacidad == 120) $asientosPorFila = 12; // 3D: Son 10 filas de 12
-        if ($capacidad == 200) $asientosPorFila = 20; // IMAX: Son 10 filas de 20
+        // 1. Verificar si existen los asientos en la BD para esta sala, si no, los creamos
+        $asientosDB = Asiento::where('sala_id', $salaId)->get();
 
-        // Calculamos cuántas filas necesitamos
-        $totalFilas = ceil($capacidad / $asientosPorFila);
-        $letras = range('A', 'Z'); // Creamos las letras A, B, C, D...
-
-        // LLENAMOS LA MATRIZ DE ASIENTOS
-        for ($f = 0; $f < $totalFilas; $f++) {
-            $fila = $letras[$f];
-            
-            for ($i = 1; $i <= $asientosPorFila; $i++) {
-                $id = $fila . $i; // Ejemplo: A1, B5, C10
-                $estatus = 'disponible';
-
-                // =========================================================================
-                // DEMO: Simulando ocupación (En el futuro, esto vendrá de la Base de Datos)
-                // =========================================================================
-                // Simulamos vendidos: Fila C asientos 4 y 5, y Fila F asiento 2
-                if (in_array($id, ['C4', 'C5', 'F2'])) $estatus = 'vendido';
-                
-                // Simulamos VIP: Fila E asientos del 9 al 12 SOLO en sala IMAX
-                if ($this->tipoSala == 'IMAX' && $fila == 'E' && in_array($i, [9, 10, 11, 12])) {
-                    $estatus = 'vip';
-                }
-                // =========================================================================
-
-                // Guardamos los datos del asiento en la matriz
-                $this->asientos[$id] = [
-                    'id' => $id,
-                    'fila' => $fila,
-                    'numero' => $i,
-                    'estatus' => $estatus,
-                    'bloqueado_por' => null
-                ];
+        if ($asientosDB->isEmpty()) {
+            // Default: roughly square shape (e.g. 10x10 for 100, 8x8 for 60)
+            // Or typically cinemas have 10-20 seats per row.
+            // Let's use 10 for capacities <= 100, 15 for <= 160, 20 for > 160.
+            $asientosPorFila = 10;
+            if ($capacidad > 100 && $capacidad <= 160) {
+                $asientosPorFila = 15;
+            } elseif ($capacidad > 160) {
+                $asientosPorFila = 20;
             }
+
+            $totalFilas = ceil($capacidad / $asientosPorFila);
+            $letras = range('A', 'Z');
+            
+            $nuevosAsientos = [];
+            $asientosGenerados = 0;
+
+            for ($f = 0; $f < $totalFilas; $f++) {
+                $fila = $letras[$f];
+                
+                // Only generate up to total capacity to avoid over-generating
+                for ($i = 1; $i <= $asientosPorFila; $i++) {
+                    if ($asientosGenerados >= $capacidad) break;
+
+                    $tipo = 'Tradicional';
+                    $nuevosAsientos[] = [
+                        'sala_id' => $salaId,
+                        'fila' => $fila,
+                        'numero' => $i,
+                        'tipo' => $tipo,
+                        'created_at' => now(),
+                        'updated_at' => now()
+                    ];
+                    $asientosGenerados++;
+                }
+            }
+            if (!empty($nuevosAsientos)) {
+                Asiento::insert($nuevosAsientos);
+                $asientosDB = Asiento::where('sala_id', $salaId)->get();
+            }
+        }
+
+        // 2. Traer el estado actual de las reservaciones desde funcion_asiento
+        $reservaciones = DB::table('funcion_asiento')
+            ->where('funcion_id', $this->funcionId)
+            ->get()
+            ->keyBy('asiento_id');
+
+        // 3. Reconstruir matiz $this->asientos
+        foreach ($asientosDB as $asiento) {
+            $idStr = $asiento->fila . $asiento->numero;
+            $estatus = 'disponible';
+            $bloqueadoPor = null;
+
+            if ($reservaciones->has($asiento->id)) {
+                $res = $reservaciones->get($asiento->id);
+                
+                if ($res->status === 'ocupado') {
+                    $estatus = 'vendido';
+                } elseif ($res->status === 'reservado') {
+                    // Si fuiste tú quien lo reservó
+                    if ($res->session_id === $this->sessionId || ($res->user_id && $res->user_id === Auth::id())) {
+                        $estatus = 'seleccionado';
+                        $bloqueadoPor = $this->sessionId;
+                        if (!in_array($idStr, $this->misSelecciones)) {
+                            $this->misSelecciones[] = $idStr;
+                        }
+                    } else {
+                        // Bloqueado temporalmente por otra persona
+                        $estatus = 'bloqueado';
+                        $bloqueadoPor = $res->session_id;
+                    }
+                }
+            }
+
+            $this->asientos[$idStr] = [
+                'db_id' => $asiento->id,
+                'id' => $idStr,
+                'fila' => $asiento->fila,
+                'numero' => $asiento->numero,
+                'estatus' => $estatus,
+                'bloqueado_por' => $bloqueadoPor,
+            ];
         }
     }
 
@@ -79,36 +131,58 @@ new class extends Component
     public function seleccionarAsiento($id)
     {
         $asiento = $this->asientos[$id];
+        $dbId = $asiento['db_id'];
 
-        // REGLAS DE NEGOCIO (Candados)
-        if ($asiento['estatus'] === 'vendido') return; // No tocar vendidos
+        if ($asiento['estatus'] === 'vendido') return;
         
-        // No tocar los que bloqueó alguien más (candado gris)
         if ($asiento['estatus'] === 'bloqueado' && $asiento['bloqueado_por'] !== $this->sessionId) {
             return;
         }
 
-        // SI YA ES MI SELECCIÓN: Lo deselecciono (Vuelve a Verde o Amarillo VIP)
+        // SI YA ES MI SELECCIÓN: Lo deselecciono (Liberar en BD)
         if (in_array($id, $this->misSelecciones)) {
             $this->misSelecciones = array_diff($this->misSelecciones, [$id]);
             
-            // Lógica VIP para IMAX si deselecciono
-            $esVip = ($this->tipoSala == 'IMAX' && str_contains($id, 'E') && in_array($asiento['numero'], [9, 10, 11, 12]));
-            $this->asientos[$id]['estatus'] = $esVip ? 'vip' : 'disponible';
+            $this->asientos[$id]['estatus'] = 'disponible';
             $this->asientos[$id]['bloqueado_por'] = null;
 
-            // TODO: Emitir evento WebSocket "AsientoLiberado" para Reverb
+            // Eliminar reservación
+            DB::table('funcion_asiento')
+                ->where('funcion_id', $this->funcionId)
+                ->where('asiento_id', $dbId)
+                ->where('session_id', $this->sessionId)
+                ->delete();
+
         } 
-        // SI ESTÁ LIBRE: Lo selecciono (Se pinta de Azul)
+        // SI ESTÁ LIBRE: Lo selecciono (Bloquear en BD)
         else {
-            // Límite opcional de la industria: No más de 10 boletos por compra
             if(count($this->misSelecciones) >= 10) return; 
 
+            // Verificar rápido que alguien no lo haya ganado en BD justo antes de mí
+            $existe = DB::table('funcion_asiento')
+                ->where('funcion_id', $this->funcionId)
+                ->where('asiento_id', $dbId)
+                ->exists();
+
+            if ($existe) {
+                // Alguien más lo agarró
+                $this->asientos[$id]['estatus'] = 'bloqueado';
+                return;
+            }
+
             $this->misSelecciones[] = $id;
-            $this->asientos[$id]['estatus'] = 'seleccionado'; // Azul Neón
+            $this->asientos[$id]['estatus'] = 'seleccionado';
             $this->asientos[$id]['bloqueado_por'] = $this->sessionId;
 
-            // TODO: Emitir evento WebSocket "AsientoBloqueado" para Reverb
+            DB::table('funcion_asiento')->insert([
+                'funcion_id' => $this->funcionId,
+                'asiento_id' => $dbId,
+                'status' => 'reservado',
+                'user_id' => Auth::check() ? Auth::id() : null,
+                'session_id' => $this->sessionId,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
         }
     }
 
@@ -157,9 +231,6 @@ new class extends Component
                                     // Verde Neón (Disponible)
                                     'bg-green-500 hover:bg-green-400 text-green-900 shadow-[0_0_10px_rgba(34,197,94,0.3)]' => $asiento['estatus'] === 'disponible',
                                     
-                                    // VIP (Amarillo Estrella)
-                                    'bg-yellow-400 hover:bg-yellow-300 text-yellow-900 shadow-[0_0_10px_rgba(250,204,21,0.3)]' => $asiento['estatus'] === 'vip',
-                                    
                                     // Tu Selección (Azul Neón Brillo)
                                     'bg-blue-600 border-2 border-blue-400 text-white shadow-[0_0_20px_rgba(37,99,235,0.6)] scale-110' => $asiento['estatus'] === 'seleccionado',
                                     
@@ -171,9 +242,7 @@ new class extends Component
                                 ])
                                 {{ in_array($asiento['estatus'], ['vendido', 'bloqueado']) ? 'disabled' : '' }}
                             >
-                                @if($asiento['estatus'] === 'vip')
-                                    <i class="bi bi-star-fill text-yellow-700"></i>
-                                @elseif($asiento['estatus'] === 'bloqueado')
+                                @if($asiento['estatus'] === 'bloqueado')
                                     <i class="bi bi-lock-fill text-gray-300"></i>
                                 @elseif($asiento['estatus'] === 'seleccionado')
                                     <i class="bi bi-check-lg text-white"></i>
@@ -193,7 +262,6 @@ new class extends Component
     <div class="bg-[#151E2E] p-4 md:p-6 rounded-2xl border border-gray-800 flex flex-wrap justify-center gap-4 md:gap-6 text-xs md:text-sm text-gray-400 mt-4">
         <div class="flex items-center gap-2"><div class="w-4 h-4 rounded-full bg-green-500"></div> Disponible</div>
         <div class="flex items-center gap-2"><div class="w-4 h-4 rounded-full bg-blue-600 border border-blue-400"></div> Tu Selección</div>
-        <div class="flex items-center gap-2"><div class="w-4 h-4 rounded-full bg-yellow-400"></div> VIP (Sala IMAX)</div>
         <div class="flex items-center gap-2"><div class="w-4 h-4 rounded-full bg-gray-600 flex items-center justify-center text-[10px] text-white"><i class="bi bi-lock-fill"></i></div> En Proceso (WebSockets)</div>
         <div class="flex items-center gap-2"><div class="w-4 h-4 rounded-full bg-red-600"></div> Vendido</div>
     </div>
