@@ -74,6 +74,19 @@
                                     {{ $funcion->sala->sucursal->nombre ?? 'Sucursal no asignada' }}
                                 </span>
                             </div>
+                            <td class="p-4 border-b border-gray-800">
+    @if($funcion->sala->estatus === 'Disponible')
+        <span class="inline-flex items-center gap-1.5 py-1 px-3 rounded-full text-xs font-bold bg-green-500/10 text-green-400 border border-green-500/30 shadow-[0_0_10px_rgba(34,197,94,0.1)]">
+            <span class="w-2 h-2 rounded-full bg-green-400 shadow-[0_0_5px_#4ade80] animate-pulse"></span>
+            Disponible
+        </span>
+    @else
+        <span class="inline-flex items-center gap-1.5 py-1 px-3 rounded-full text-xs font-bold bg-orange-500/10 text-orange-400 border border-orange-500/30 shadow-[0_0_10px_rgba(249,115,22,0.1)]">
+            <span class="w-2 h-2 rounded-full bg-orange-500"></span>
+            Fuera de servicio
+        </span>
+    @endif
+</td>
                         </td>
                         <td class="p-4">
                             <div class="text-purple-400 font-bold text-sm"><i class="bi bi-calendar-event mr-1"></i> {{ date('d/m/Y', strtotime($funcion->fecha)) }}</div>

@@ -50,7 +50,12 @@ Route::get('/', function (Request $request) {
 
     return view('welcome', compact('peliculas', 'sucursales', 'sucursal_id'));
 });
-
+Route::get('/pelicula/{id}', function ($id) {
+    // Buscamos la película y traemos sus funciones con la información de la sala
+    $pelicula = App\Models\Pelicula::with('funciones.sala')->findOrFail($id);
+    
+    return view('detalle', compact('pelicula'));
+})->name('pelicula.detalle');
 // ==========================================
 // PANEL ADMINISTRATIVO (PROTEGIDO CON CANDADO)
 // ==========================================

@@ -31,23 +31,25 @@
         @foreach($peliculas as $pelicula)
         <article class="bg-[#1a202c] rounded-xl overflow-hidden shadow-2xl border border-gray-800 flex flex-col hover:border-cinecyan/50 transition-all duration-300">
             
-            <figure class="relative h-[400px] overflow-hidden bg-gray-900">
+            <a href="{{ route('pelicula.detalle', $pelicula->id) }}" class="relative h-[400px] overflow-hidden bg-gray-900 block group">
                 @if($pelicula->imagen_url)
-                    <img src="{{ $pelicula->imagen_url }}" alt="{{ $pelicula->titulo }}" class="w-full h-full object-cover">
+                    <img src="{{ $pelicula->imagen_url }}" alt="{{ $pelicula->titulo }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
                 @else
-                    <div class="w-full h-full flex flex-col items-center justify-center text-gray-700 p-6 text-center">
+                    <div class="w-full h-full flex flex-col items-center justify-center text-gray-700 p-6 text-center group-hover:text-gray-500 transition-colors">
                         <i class="bi bi-film text-6xl mb-2"></i>
                         <span class="text-[10px] uppercase font-bold tracking-widest">Póster no disponible</span>
                     </div>
                 @endif
-                <div class="absolute top-3 right-3 bg-black/80 backdrop-blur-sm border border-gray-700 text-white text-[10px] font-bold px-2 py-1 rounded uppercase">
+                <div class="absolute top-3 right-3 bg-black/80 backdrop-blur-sm border border-gray-700 text-white text-[10px] font-bold px-2 py-1 rounded uppercase z-10">
                     {{ $pelicula->clasificacion }}
                 </div>
-            </figure>
+            </a>
 
             <div class="p-5 flex-1 flex flex-col">
                 <div class="h-16 mb-2">
-                    <h3 class="text-lg font-bold text-white leading-tight line-clamp-2">{{ $pelicula->titulo }}</h3>
+                    <a href="{{ route('pelicula.detalle', $pelicula->id) }}">
+                        <h3 class="text-lg font-bold text-white leading-tight line-clamp-2 hover:text-cinecyan transition-colors">{{ $pelicula->titulo }}</h3>
+                    </a>
                     <p class="text-cinecyan text-[10px] font-bold mt-1 uppercase tracking-widest">{{ $pelicula->genero }}</p>
                 </div>
                 

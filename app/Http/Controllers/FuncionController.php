@@ -17,13 +17,13 @@ class FuncionController extends Controller
 
     public function create()
     {
+        // Traemos todas las películas
         $peliculas = Pelicula::all();
-        $salas = Sala::with('sucursal')->get();
         
-        $minDate = now()->format('Y-m-d');
-        $maxDate = now()->addMonth()->format('Y-m-d');
+        // EL CANDADO: Solo traemos las salas que estén 'Disponible'
+        $salas = Sala::where('estatus', 'Disponible')->get(); 
 
-        return view('admin.funciones.create', compact('peliculas', 'salas', 'minDate', 'maxDate'));
+        return view('admin.funciones.create', compact('peliculas', 'salas'));
     }
 
     public function store(Request $request)

@@ -1,0 +1,66 @@
+@extends('layouts.app')
+
+@section('title', $pelicula->titulo . ' - Cineplex')
+
+@section('content')
+<div class="max-w-6xl mx-auto bg-cinecard rounded-3xl p-6 md:p-10 border border-gray-800 shadow-2xl mt-4 md:mt-8">
+    
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-10">
+        <div class="md:col-span-1">
+            @if($pelicula->imagen_url)
+                <img src="{{ $pelicula->imagen_url }}" alt="{{ $pelicula->titulo }}" class="w-full rounded-2xl shadow-[0_0_30px_rgba(66,165,245,0.15)] border border-gray-700 object-cover aspect-[2/3]">
+            @else
+                <div class="w-full aspect-[2/3] bg-[#0B0F19] rounded-2xl flex items-center justify-center border border-gray-700 shadow-lg">
+                    <i class="bi bi-film text-6xl text-gray-600"></i>
+                </div>
+            @endif
+        </div>
+
+        <div class="md:col-span-2 flex flex-col justify-center">
+            <h2 class="text-4xl md:text-5xl font-black mb-4 text-transparent bg-clip-text bg-gradient-to-r from-cinecyan to-cinemagenta uppercase tracking-tight">
+                {{ $pelicula->titulo }}
+            </h2>
+            
+            <div class="flex flex-wrap gap-3 mb-8">
+                <span class="px-4 py-1 bg-gray-800 rounded-full text-sm font-bold border border-gray-600 shadow-sm">{{ $pelicula->clasificacion }}</span>
+                <span class="px-4 py-1 bg-cinecyan/10 text-cinecyan rounded-full text-sm font-semibold border border-cinecyan/30">{{ $pelicula->duracion }} min</span>
+                <span class="px-4 py-1 bg-cinemagenta/10 text-cinemagenta rounded-full text-sm font-semibold border border-cinemagenta/30">{{ $pelicula->genero }}</span>
+                <span class="px-4 py-1 bg-purple-500/10 text-purple-400 rounded-full text-sm font-semibold border border-purple-500/30">{{ $pelicula->idioma }} | {{ $pelicula->formato }}</span>
+            </div>
+
+            <h3 class="text-xl font-bold mb-3 text-white border-b border-gray-800 pb-2">Sinopsis</h3>
+            <p class="text-gray-400 leading-relaxed mb-10 text-lg">
+                {{ $pelicula->sinopsis ?? 'Sin descripción disponible por el momento.' }}
+            </p>
+
+            <h3 class="text-xl font-bold mb-4 text-white flex items-center gap-2">
+                <i class="bi bi-ticket-perforated text-cinecyan"></i> Horarios Disponibles
+            </h3>
+            
+            @if($pelicula->funciones->count() > 0)
+                <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+                    @foreach($pelicula->funciones as $funcion)
+                        <div class="bg-[#0B0F19] p-4 rounded-xl border border-gray-700 text-center hover:border-cinecyan hover:shadow-[0_0_15px_rgba(66,165,245,0.2)] transition-all group cursor-pointer">
+                            <p class="text-sm text-gray-400 mb-1 capitalize">{{ \Carbon\Carbon::parse($funcion->fecha)->translatedFormat('d M') }}</p>
+                            <p class="text-2xl font-black text-white group-hover:text-cinecyan transition-colors">{{ \Carbon\Carbon::parse($funcion->hora)->format('H:i') }}</p>
+                            <p class="text-xs text-cinemagenta mt-1 font-bold">Sala {{ $funcion->sala->nombre ?? 'X' }}</p>
+                        </div>
+                    @endforeach
+                </div>
+            @else
+                <div class="bg-orange-500/10 border border-orange-500/30 rounded-xl p-4 text-orange-400 flex items-center gap-3">
+                    <i class="bi bi-info-circle text-xl"></i>
+                    <p>No hay funciones programadas para esta película por el momento. ¡Vuelve pronto!</p>
+                </div>
+            @endif
+        </div>
+    </div>
+    
+    <div class="mt-12 text-center md:text-left border-t border-gray-800 pt-6">
+        <a href="/" class="inline-flex items-center gap-2 px-6 py-3 bg-gray-800 hover:bg-gray-700 text-white font-bold rounded-xl transition-all shadow-lg">
+            <i class="bi bi-arrow-left"></i> Volver a la Cartelera
+        </a>
+    </div>
+
+</div>
+@endsection
