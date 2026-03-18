@@ -55,9 +55,9 @@
                         <th class="p-4">ID</th>
                         <th class="p-4">Película</th>
                         <th class="p-4">Sala / Ubicación</th>
+                        <th class="p-4">Disponibilidad</th>
                         <th class="p-4">Fecha y Hora</th>
-                        <th class="p-4">Precio</th>
-                        <th class="p-4 text-center">Acciones</th>
+                        <th class="p-4 text-center">Precio</th>
                     </tr>
                 </thead>
                 <tbody id="tableBody">
