@@ -56,6 +56,13 @@ Route::get('/pelicula/{id}', function ($id) {
     
     return view('detalle', compact('pelicula'));
 })->name('pelicula.detalle');
+
+Route::get('/comprar/{funcion_id}', function ($funcion_id) {
+    // Buscamos la función con los datos de su película y su sala
+    $funcion = App\Models\Funcion::with(['pelicula', 'sala'])->findOrFail($funcion_id);
+    
+    return view('comprar', compact('funcion'));
+})->name('comprar.asientos');
 // ==========================================
 // PANEL ADMINISTRATIVO (PROTEGIDO CON CANDADO)
 // ==========================================

@@ -39,13 +39,17 @@
             
             @if($pelicula->funciones->count() > 0)
                 <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-                    @foreach($pelicula->funciones as $funcion)
-                        <div class="bg-[#0B0F19] p-4 rounded-xl border border-gray-700 text-center hover:border-cinecyan hover:shadow-[0_0_15px_rgba(66,165,245,0.2)] transition-all group cursor-pointer">
-                            <p class="text-sm text-gray-400 mb-1 capitalize">{{ \Carbon\Carbon::parse($funcion->fecha)->translatedFormat('d M') }}</p>
-                            <p class="text-2xl font-black text-white group-hover:text-cinecyan transition-colors">{{ \Carbon\Carbon::parse($funcion->hora)->format('H:i') }}</p>
-                            <p class="text-xs text-cinemagenta mt-1 font-bold">Sala {{ $funcion->sala->nombre ?? 'X' }}</p>
-                        </div>
-                    @endforeach
+                @foreach($pelicula->funciones as $funcion)
+    <a href="{{ route('comprar.asientos', $funcion->id) }}" class="block bg-[#0B0F19] p-4 rounded-xl border border-gray-700 text-center hover:border-cinecyan hover:shadow-[0_0_15px_rgba(66,165,245,0.2)] transition-all group cursor-pointer relative overflow-hidden">
+        <p class="text-sm text-gray-400 mb-1 capitalize">{{ \Carbon\Carbon::parse($funcion->fecha)->translatedFormat('d M') }}</p>
+        <p class="text-2xl font-black text-white group-hover:text-cinecyan transition-colors">{{ \Carbon\Carbon::parse($funcion->hora)->format('H:i') }}</p>
+        <p class="text-xs text-cinemagenta mt-1 font-bold">Sala {{ $funcion->sala->nombre ?? 'X' }}</p>
+        
+        <div class="mt-3 bg-cinecyan/10 text-cinecyan text-xs py-1.5 rounded-md font-bold group-hover:bg-cinecyan group-hover:text-white transition-colors">
+            ELEGIR ASIENTOS
+        </div>
+    </a>
+@endforeach
                 </div>
             @else
                 <div class="bg-orange-500/10 border border-orange-500/30 rounded-xl p-4 text-orange-400 flex items-center gap-3">
@@ -63,4 +67,10 @@
     </div>
 
 </div>
+<div class="mt-16 border-t border-gray-800 pt-10">
+        <h3 class="text-2xl font-black mb-8 text-center text-white uppercase tracking-widest">Selecciona tus lugares</h3>
+        
+       
+        
+    </div>
 @endsection
