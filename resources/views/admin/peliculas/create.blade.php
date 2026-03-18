@@ -119,10 +119,20 @@
                 </div>
             </div>
             <div>
-    <label for="imagen_url" class="block text-sm font-semibold text-gray-400 mb-1">URL del Póster (Imagen)</label>
-    <input type="url" name="imagen_url" id="imagen_url" value="{{ old('imagen_url', $pelicula->imagen_url ?? '') }}" placeholder="https://ejemplo.com/poster.jpg" 
-        class="block w-full bg-[#0B0F19] border border-gray-700 rounded-md shadow-sm py-2 px-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium transition-colors">
-</div>
+                <label for="imagen_url" class="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">URL del Póster (Imagen)</label>
+                <input type="url" name="imagen_url" id="imagen_url" value="{{ old('imagen_url') }}" placeholder="https://ejemplo.com/poster.jpg" 
+                    class="block w-full bg-[#0B0F19] border border-gray-700 rounded-xl py-3 px-4 text-white focus:outline-none focus:ring-1 focus:ring-blue-500 font-medium transition-all shadow-inner">
+                
+                <div id="preview-container" class="mt-4 hidden">
+                    <p class="text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">Vista Previa:</p>
+                    <div class="relative w-40 aspect-[2/3] rounded-xl overflow-hidden border border-gray-800 shadow-xl bg-gray-900 flex items-center justify-center">
+                        <img id="poster-preview" src="#" alt="Vista previa" class="w-full h-full object-cover">
+                        <div id="preview-placeholder" class="absolute inset-0 flex items-center justify-center bg-gray-900 text-gray-700 hidden">
+                            <i class="bi bi-image text-4xl"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
             <div>
                 <label for="sinopsis" class="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Sinopsis <span class="text-red-500">*</span></label>
                 <textarea name="sinopsis" id="sinopsis" rows="4" 
@@ -148,6 +158,21 @@
 </div>
 
 <script>
+    const posterInput = document.getElementById('imagen_url');
+    const previewContainer = document.getElementById('preview-container');
+    const posterPreview = document.getElementById('poster-preview');
+
+    function updatePreview(url) {
+        if (url) {
+            posterPreview.src = url;
+            previewContainer.classList.remove('hidden');
+        } else {
+            previewContainer.classList.add('hidden');
+        }
+    }
+
+    posterInput.addEventListener('input', (e) => updatePreview(e.target.value));
+
     document.getElementById('btnBuscarTMDB').addEventListener('click', async function() {
         const titulo = document.getElementById('titulo').value;
         if (!titulo) {
@@ -174,7 +199,8 @@
                 }
                 
                 if (data.imagen_url) {
-                    document.getElementById('imagen_url').value = data.imagen_url;
+                    posterInput.value = data.imagen_url;
+                    updatePreview(data.imagen_url);
                 }
                 
                 if (data.genero) {

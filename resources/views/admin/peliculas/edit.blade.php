@@ -84,10 +84,18 @@
                 </div>
             </div>
             
-            <div class="mt-6">
+            <div>
                 <label for="imagen_url" class="block text-sm font-semibold text-gray-700 mb-1 text-black">URL del Póster (Imagen)</label>
                 <input type="url" name="imagen_url" id="imagen_url" value="{{ old('imagen_url', $pelicula->imagen_url ?? '') }}" placeholder="https://ejemplo.com/poster.jpg" 
                     class="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-black font-medium">
+                
+                <div id="preview-container" class="mt-4 {{ $pelicula->imagen_url ? '' : 'hidden' }}">
+                    <p class="text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">Vista Previa:</p>
+                    <div class="relative w-40 aspect-[2/3] rounded-xl overflow-hidden border border-gray-200 shadow-lg bg-gray-100 flex items-center justify-center">
+                        <img id="poster-preview" src="{{ $pelicula->imagen_url ?? '#' }}" alt="Vista previa" class="w-full h-full object-cover">
+                    </div>
+                </div>
+
                 @error('imagen_url')
                     <p class="text-red-600 text-xs mt-1 font-bold">{{ $message }}</p>
                 @enderror
@@ -131,6 +139,21 @@
 </div>
 
 <script>
+    const posterInput = document.getElementById('imagen_url');
+    const previewContainer = document.getElementById('preview-container');
+    const posterPreview = document.getElementById('poster-preview');
+
+    function updatePreview(url) {
+        if (url) {
+            posterPreview.src = url;
+            previewContainer.classList.remove('hidden');
+        } else {
+            previewContainer.classList.add('hidden');
+        }
+    }
+
+    posterInput.addEventListener('input', (e) => updatePreview(e.target.value));
+
     document.getElementById('btnBuscarTMDB').addEventListener('click', async function() {
         const titulo = document.getElementById('titulo').value;
         if (!titulo) {
@@ -157,7 +180,8 @@
                 }
                 
                 if (data.imagen_url) {
-                    document.getElementById('imagen_url').value = data.imagen_url;
+                    posterInput.value = data.imagen_url;
+                    updatePreview(data.imagen_url);
                 }
                 
                 if (data.genero) {

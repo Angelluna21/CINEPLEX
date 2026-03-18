@@ -7,6 +7,7 @@ use App\Models\Genre;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 class PeliculaController extends Controller
@@ -72,50 +73,55 @@ class PeliculaController extends Controller
         }
     }
 
-    private function downloadAndSavePoster($query, $existingUrl = null)
+    private function downloadAndSavePoster($titulo, $existingUrl = null)
     {
-        // 1. Si el usuario proporcionó una URL manualmente (y no es una URL local nuestra), priorizarla
+        // 1. Si el usuario proporcionó una URL manualmente (y no es una URL local nuestra), intentamos descargarla
         if ($existingUrl && !str_starts_with($existingUrl, '/storage/')) {
             try {
-                $imageContent = Http::get($existingUrl)->body();
-                $filename = Str::slug($query) . '-manual-' . time() . '.jpg';
-                Storage::disk('public')->put('portadas/' . $filename, $imageContent);
-                return '/storage/portadas/' . $filename;
+                $response = Http::timeout(10)->get($existingUrl);
+                if ($response->successful()) {
+                    $imageContent = $response->body();
+                    $extension = 'jpg'; // Por defecto, podrías intentar detectarlo de headers
+                    
+                    $filename = Str::slug($titulo) . '-local-' . time() . '.' . $extension;
+                    Storage::disk('public')->put('portadas/' . $filename, $imageContent);
+                    return '/storage/portadas/' . $filename;
+                }
             } catch (\Exception $e) {
-                // Fallback a intentar con TMDB si falla la descarga manual
+                \Log::warning("Error al descargar póster manual para '{$titulo}': " . $e->getMessage());
             }
         }
 
-        // 2. Si no hay URL manual, usar TMDB
+        // 2. Si no hay URL manual o falló la descarga, intentamos buscar en TMDB automáticamente
         $apiKey = env('TMDB_API_KEY');
         if ($apiKey) {
             try {
-                $response = Http::get("https://api.themoviedb.org/3/search/movie", [
+                $searchResponse = Http::get("https://api.themoviedb.org/3/search/movie", [
                     'api_key' => $apiKey,
-                    'query' => $query,
+                    'query' => $titulo,
                     'language' => 'es-MX',
-                    'include_adult' => 'false'
                 ]);
 
-                if ($response->successful() && !empty($response->json('results'))) {
-                    $posterPath = $response->json('results')[0]['poster_path'];
+                if ($searchResponse->successful() && !empty($searchResponse->json('results'))) {
+                    $posterPath = $searchResponse->json('results')[0]['poster_path'];
                     
                     if ($posterPath) {
                         $imageUrl = "https://image.tmdb.org/t/p/w500" . $posterPath;
-                        $imageContent = Http::get($imageUrl)->body();
+                        $imageResponse = Http::get($imageUrl);
                         
-                        $filename = Str::slug($query) . '-' . time() . '.jpg';
-                        Storage::disk('public')->put('portadas/' . $filename, $imageContent);
-                        
-                        return '/storage/portadas/' . $filename;
+                        if ($imageResponse->successful()) {
+                            $filename = Str::slug($titulo) . '-' . time() . '.jpg';
+                            Storage::disk('public')->put('portadas/' . $filename, $imageResponse->body());
+                            return '/storage/portadas/' . $filename;
+                        }
                     }
                 }
             } catch (\Exception $e) {
-                // Ignore TMDB error
+                \Log::error("Error en fallback de TMDB para '{$titulo}': " . $e->getMessage());
             }
         }
 
-        // 3. Si era una URL local que ya existía, devolverla tal cual para no perderla
+        // 3. Fallback: Si ya era una URL local (/storage/...), devolverla intacta
         if ($existingUrl && str_starts_with($existingUrl, '/storage/')) {
             return $existingUrl;
         }
