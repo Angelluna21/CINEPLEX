@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             
             // Relación con la función (Película, Hora, Sala)
-            $table->foreignId('funcion_id')->constrained()->onDelete('cascade');
+            $table->foreignId('funcion_id')->constrained('funciones')->onDelete('cascade');
             
             // Relación con el asiento físico
             $table->foreignId('asiento_id')->constrained()->onDelete('cascade');
