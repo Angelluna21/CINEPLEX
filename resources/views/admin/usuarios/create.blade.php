@@ -49,6 +49,14 @@
             </div>
 
             <div>
+                <label class="block text-gray-400 text-xs uppercase font-bold mb-2 ml-1">Rol</label>
+                <select name="role" required class="w-full bg-[#0B0F19] border border-gray-700 rounded-xl py-3 px-4 focus:outline-none focus:border-pink-500 transition-all text-white">
+                    <option value="empleado" {{ old('role') == 'empleado' ? 'selected' : '' }}>Empleado</option>
+                    <option value="admin" {{ old('role') == 'admin' ? 'selected' : '' }}>Administrador</option>
+                </select>
+            </div>
+
+            <div>
                 <label class="block text-gray-400 text-xs uppercase font-bold mb-2 ml-1">Contraseña</label>
                 <input type="password" name="password" required
                     class="w-full bg-[#0B0F19] border border-gray-700 rounded-xl py-3 px-4 focus:outline-none focus:border-pink-500 transition-all text-white"

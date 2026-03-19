@@ -142,11 +142,14 @@ Route::middleware(['auth'])->group(function () {
         Route::resource('generos', GenreController::class)->parameters([
             'generos' => 'genre'
         ]);
-        Route::resource('sucursales', SucursalController::class)->names('sucursales');
-        Route::resource('salas', SalaController::class)->names('salas');
-        Route::resource('usuarios', UserController::class)->names('usuarios');
         Route::resource('funciones', FuncionController::class)->names('funciones');
         
+        // Rutas exclusivas del administrador
+        Route::middleware(['role:admin'])->group(function () {
+            Route::resource('sucursales', SucursalController::class)->names('sucursales');
+            Route::resource('salas', SalaController::class)->names('salas');
+            Route::resource('usuarios', UserController::class)->names('usuarios');
+        });
     });
     
 });
