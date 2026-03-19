@@ -10,11 +10,11 @@ use Illuminate\Support\Facades\Auth;
 new class extends Component
 {
     // PROPIEDADES
-    public $funcionId;    // Recibe el ID de la función al cargar
-    public $sessionId;    // Para saber quién bloquea qué asiento
-    public $asientos = []; // Matriz de asientos (id, fila, numero, estatus, bloqueado_por)
-    public $misSelecciones = []; // Lista de IDs de asientos que yo elegí
-    public $tipoSala = ''; // Nombre de la sala (Tradicional, IMAX, 4D...)
+    public $funcionId;    
+    public $sessionId;    
+    public $asientos = []; 
+    public $misSelecciones = []; 
+    public $tipoSala = ''; 
 
     // SE EJECUTA AL INICIAR EL COMPONENTE
     public function mount($funcionId)
@@ -37,11 +37,13 @@ new class extends Component
     // LÓGICA CONECTADA A LA BASE DE DATOS
     public function generarMapaDeAsientos($salaId, $capacidad)
     {
-        // 1. Verificar si existen los asientos en la BD para esta sala, si no, los creamos
+        // 1. Consultar asientos existentes con ORDEN ESTRICTO
         $asientosDB = Asiento::where('sala_id', $salaId)
-    ->orderBy('fila', 'asc')
-    ->orderBy('numero', 'asc')
-    ->get();
+            ->orderBy('fila', 'asc')
+            ->orderBy('numero', 'asc')
+            ->get();
+
+        // 2. Si la sala está vacía, creamos los asientos por primera vez
         if ($asientosDB->isEmpty()) {
             $asientosPorFila = 10;
             if ($capacidad > 100 && $capacidad <= 160) {
@@ -53,7 +55,6 @@ new class extends Component
             $totalFilas = ceil($capacidad / $asientosPorFila);
             $letras = range('A', 'Z');
             
-            $nuevosAsientos = [];
             $asientosGenerados = 0;
 
             for ($f = 0; $f < $totalFilas; $f++) {
@@ -62,31 +63,32 @@ new class extends Component
                 for ($i = 1; $i <= $asientosPorFila; $i++) {
                     if ($asientosGenerados >= $capacidad) break;
 
-                    $tipo = 'Tradicional';
-                    $nuevosAsientos[] = [
+                    // Usamos CREATE uno por uno para que el contador de ID de Postgres se actualice bien
+                    Asiento::create([
                         'sala_id' => $salaId,
                         'fila' => $fila,
                         'numero' => $i,
-                        'tipo' => $tipo,
-                        'created_at' => now(),
-                        'updated_at' => now()
-                    ];
+                        'tipo' => 'Tradicional',
+                    ]);
                     $asientosGenerados++;
                 }
             }
-            if (!empty($nuevosAsientos)) {
-                Asiento::insert($nuevosAsientos);
-                $asientosDB = Asiento::where('sala_id', $salaId)->get();
-            }
+
+            // Volvemos a consultar después de crear para tener los datos reales
+            $asientosDB = Asiento::where('sala_id', $salaId)
+                ->orderBy('fila', 'asc')
+                ->orderBy('numero', 'asc')
+                ->get();
         }
 
-        // 2. Traer el estado actual de las reservaciones
+        // 3. Traer el estado actual de las reservaciones
         $reservaciones = DB::table('funcion_asiento')
             ->where('funcion_id', $this->funcionId)
             ->get()
             ->keyBy('asiento_id');
 
-        // 3. Reconstruir matiz $this->asientos
+        // 4. Reconstruir matriz para la vista
+        $this->asientos = []; // Limpiamos antes de llenar
         foreach ($asientosDB as $asiento) {
             $idStr = $asiento->fila . $asiento->numero;
             $estatus = 'disponible';
@@ -122,7 +124,6 @@ new class extends Component
         }
     }
 
-    // LÓGICA AL DAR CLIC A UN ASIENTO
     public function seleccionarAsiento($id)
     {
         $asiento = $this->asientos[$id];
@@ -136,7 +137,6 @@ new class extends Component
 
         if (in_array($id, $this->misSelecciones)) {
             $this->misSelecciones = array_diff($this->misSelecciones, [$id]);
-            
             $this->asientos[$id]['estatus'] = 'disponible';
             $this->asientos[$id]['bloqueado_por'] = null;
 
@@ -145,7 +145,6 @@ new class extends Component
                 ->where('asiento_id', $dbId)
                 ->where('session_id', $this->sessionId)
                 ->delete();
-
         } else {
             if(count($this->misSelecciones) >= 10) return; 
 
@@ -179,7 +178,6 @@ new class extends Component
     public function procesarBloqueoDeOtroUsuario($event)
     {
         $asientoId = $event['asiento_id'];
-        
         if (!in_array($asientoId, $this->misSelecciones)) {
             $this->asientos[$asientoId]['estatus'] = 'bloqueado';
             $this->asientos[$asientoId]['bloqueado_por'] = $event['session_id'];
@@ -207,13 +205,9 @@ new class extends Component
                             <button 
                                 wire:click="seleccionarAsiento('{{ $asiento['id'] }}')"
                                 @class([
-                                    // Base sin brincos
                                     'relative rounded-t-xl rounded-b-md flex items-center justify-center font-bold transition-colors duration-300 border-2 border-transparent',
-                                    
-                                    // Tamaño proporcional
                                     'w-9 h-9 text-[10px] sm:w-10 sm:h-10 sm:text-xs md:w-11 md:h-11 lg:w-12 lg:h-12 lg:text-sm', 
                                     
-                                    // Estados de color
                                     'bg-green-500 hover:bg-green-400 text-green-900 shadow-[0_0_10px_rgba(34,197,94,0.3)]' => $asiento['estatus'] === 'disponible',
                                     'bg-blue-600 border-blue-400 text-white shadow-[0_0_20px_rgba(37,99,235,0.6)]' => $asiento['estatus'] === 'seleccionado',
                                     'bg-red-600 cursor-not-allowed opacity-50' => $asiento['estatus'] === 'vendido',
@@ -235,13 +229,12 @@ new class extends Component
                     <span class="text-gray-400 font-bold w-6 text-center text-sm lg:text-base hidden md:block">{{ $fila }}</span>
                 </div>
             @endforeach
-            
         </div>
     </div>
 
     <div class="bg-[#151E2E] p-4 md:p-6 rounded-2xl border border-gray-800 flex flex-wrap justify-center gap-4 md:gap-6 text-xs md:text-sm text-gray-400 mt-4">
-        <div class="flex items-center gap-2"><div class="w-4 h-4 rounded-full bg-green-500"></div> Disponible</div>
-        <div class="flex items-center gap-2"><div class="w-4 h-4 rounded-full bg-blue-600 border border-blue-400"></div> Tu Selección</div>
+        <div class="flex items-center gap-2"><div class="w-4 h-4 rounded-full bg-green-500 shadow-[0_0_5px_rgba(34,197,94,0.5)]"></div> Disponible</div>
+        <div class="flex items-center gap-2"><div class="w-4 h-4 rounded-full bg-blue-600 border border-blue-400 shadow-[0_0_5px_rgba(37,99,235,0.5)]"></div> Tu Selección</div>
         <div class="flex items-center gap-2"><div class="w-4 h-4 rounded-full bg-gray-600 flex items-center justify-center text-[10px] text-white"><i class="bi bi-lock-fill"></i></div> En Proceso</div>
         <div class="flex items-center gap-2"><div class="w-4 h-4 rounded-full bg-red-600"></div> Vendido</div>
     </div>
@@ -253,13 +246,4 @@ new class extends Component
             </button>
         </div>
     @endif
-
 </div>
-
-<style>
-    .custom-scrollbar::-webkit-scrollbar { height: 8px; }
-    .custom-scrollbar::-webkit-scrollbar-track { background: #0B0F19; border-radius: 10px; }
-    .custom-scrollbar::-webkit-scrollbar-thumb { background: #1f2937; border-radius: 10px; border: 2px solid #0B0F19; }
-    .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #374151; }
-    .custom-scrollbar { scrollbar-width: thin; scrollbar-color: #1f2937 #0B0F19; }
-</style>
