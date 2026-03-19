@@ -10,13 +10,12 @@ use Illuminate\Support\Facades\Auth;
 new class extends Component
 {
     // PROPIEDADES
-    public $funcionId;    // Recibe el ID de la función al cargar
-    public $sessionId;    // Para saber quién bloquea qué asiento
-    public $asientos = []; // Matriz de asientos (id, fila, numero, estatus, bloqueado_por)
-    public $misSelecciones = []; // Lista de IDs de asientos que yo elegí
-    public $tipoSala = ''; // Nombre de la sala (Tradicional, IMAX, 4D...)
+    public $funcionId;    
+    public $sessionId;    
+    public $asientos = []; 
+    public $misSelecciones = []; 
+    public $tipoSala = ''; 
 
-    // SE EJECUTA AL INICIAR EL COMPONENTE
     // SE EJECUTA AL INICIAR EL COMPONENTE
     public function mount($funcionId)
     {
@@ -38,13 +37,14 @@ new class extends Component
     // LÓGICA CONECTADA A LA BASE DE DATOS
     public function generarMapaDeAsientos($salaId, $capacidad)
     {
-        // 1. Verificar si existen los asientos en la BD para esta sala, si no, los creamos
-        $asientosDB = Asiento::where('sala_id', $salaId)->get();
+        // 1. Consultar asientos existentes con ORDEN ESTRICTO
+        $asientosDB = Asiento::where('sala_id', $salaId)
+            ->orderBy('fila', 'asc')
+            ->orderBy('numero', 'asc')
+            ->get();
 
+        // 2. Si la sala está vacía, creamos los asientos por primera vez
         if ($asientosDB->isEmpty()) {
-            // Default: roughly square shape (e.g. 10x10 for 100, 8x8 for 60)
-            // Or typically cinemas have 10-20 seats per row.
-            // Let's use 10 for capacities <= 100, 15 for <= 160, 20 for > 160.
             $asientosPorFila = 10;
             if ($capacidad > 100 && $capacidad <= 160) {
                 $asientosPorFila = 15;
@@ -55,41 +55,40 @@ new class extends Component
             $totalFilas = ceil($capacidad / $asientosPorFila);
             $letras = range('A', 'Z');
             
-            $nuevosAsientos = [];
             $asientosGenerados = 0;
 
             for ($f = 0; $f < $totalFilas; $f++) {
                 $fila = $letras[$f];
                 
-                // Only generate up to total capacity to avoid over-generating
                 for ($i = 1; $i <= $asientosPorFila; $i++) {
                     if ($asientosGenerados >= $capacidad) break;
 
-                    $tipo = 'Tradicional';
-                    $nuevosAsientos[] = [
+                    // Usamos CREATE uno por uno para que el contador de ID de Postgres se actualice bien
+                    Asiento::create([
                         'sala_id' => $salaId,
                         'fila' => $fila,
                         'numero' => $i,
-                        'tipo' => $tipo,
-                        'created_at' => now(),
-                        'updated_at' => now()
-                    ];
+                        'tipo' => 'Tradicional',
+                    ]);
                     $asientosGenerados++;
                 }
             }
-            if (!empty($nuevosAsientos)) {
-                Asiento::insert($nuevosAsientos);
-                $asientosDB = Asiento::where('sala_id', $salaId)->get();
-            }
+
+            // Volvemos a consultar después de crear para tener los datos reales
+            $asientosDB = Asiento::where('sala_id', $salaId)
+                ->orderBy('fila', 'asc')
+                ->orderBy('numero', 'asc')
+                ->get();
         }
 
-        // 2. Traer el estado actual de las reservaciones desde funcion_asiento
+        // 3. Traer el estado actual de las reservaciones
         $reservaciones = DB::table('funcion_asiento')
             ->where('funcion_id', $this->funcionId)
             ->get()
             ->keyBy('asiento_id');
 
-        // 3. Reconstruir matiz $this->asientos
+        // 4. Reconstruir matriz para la vista
+        $this->asientos = []; // Limpiamos antes de llenar
         foreach ($asientosDB as $asiento) {
             $idStr = $asiento->fila . $asiento->numero;
             $estatus = 'disponible';
@@ -101,7 +100,6 @@ new class extends Component
                 if ($res->status === 'ocupado') {
                     $estatus = 'vendido';
                 } elseif ($res->status === 'reservado') {
-                    // Si fuiste tú quien lo reservó
                     if ($res->session_id === $this->sessionId || ($res->user_id && $res->user_id === Auth::id())) {
                         $estatus = 'seleccionado';
                         $bloqueadoPor = $this->sessionId;
@@ -109,7 +107,6 @@ new class extends Component
                             $this->misSelecciones[] = $idStr;
                         }
                     } else {
-                        // Bloqueado temporalmente por otra persona
                         $estatus = 'bloqueado';
                         $bloqueadoPor = $res->session_id;
                     }
@@ -127,7 +124,6 @@ new class extends Component
         }
     }
 
-    // LÓGICA AL DAR CLIC A UN ASIENTO
     public function seleccionarAsiento($id)
     {
         $asiento = $this->asientos[$id];
@@ -139,33 +135,25 @@ new class extends Component
             return;
         }
 
-        // SI YA ES MI SELECCIÓN: Lo deselecciono (Liberar en BD)
         if (in_array($id, $this->misSelecciones)) {
             $this->misSelecciones = array_diff($this->misSelecciones, [$id]);
-            
             $this->asientos[$id]['estatus'] = 'disponible';
             $this->asientos[$id]['bloqueado_por'] = null;
 
-            // Eliminar reservación
             DB::table('funcion_asiento')
                 ->where('funcion_id', $this->funcionId)
                 ->where('asiento_id', $dbId)
                 ->where('session_id', $this->sessionId)
                 ->delete();
-
-        } 
-        // SI ESTÁ LIBRE: Lo selecciono (Bloquear en BD)
-        else {
+        } else {
             if(count($this->misSelecciones) >= 10) return; 
 
-            // Verificar rápido que alguien no lo haya ganado en BD justo antes de mí
             $existe = DB::table('funcion_asiento')
                 ->where('funcion_id', $this->funcionId)
                 ->where('asiento_id', $dbId)
                 ->exists();
 
             if ($existe) {
-                // Alguien más lo agarró
                 $this->asientos[$id]['estatus'] = 'bloqueado';
                 return;
             }
@@ -186,19 +174,11 @@ new class extends Component
         }
     }
 
-    // ==========================================
-    // MAGIA DE WEBSOCKETS (REVERB / ECHO)
-    // ==========================================
-    // Livewire v3 escucha mágicamente a Laravel Echo con este atributo.
-    // Escucha el canal público "sala.{id_funcion}" y el evento "SeatSelected"
     #[On('echo:sala.{funcionId},SeatSelected')]
     public function procesarBloqueoDeOtroUsuario($event)
     {
         $asientoId = $event['asiento_id'];
-        
-        // Si el usuario no soy yo y eligió un asiento libre para mí...
         if (!in_array($asientoId, $this->misSelecciones)) {
-            // Se le pone el candado gris (bloqueado)
             $this->asientos[$asientoId]['estatus'] = 'bloqueado';
             $this->asientos[$asientoId]['bloqueado_por'] = $event['session_id'];
         }
@@ -206,39 +186,32 @@ new class extends Component
 };
 ?>
 
-<div class="max-w-6xl mx-auto bg-[#0B0F19] p-4 md:p-8 rounded-3xl border border-gray-800 shadow-2xl text-white">
+<div class="w-full max-w-[95%] xl:max-w-[90%] mx-auto bg-[#0B0F19] p-4 md:p-8 lg:p-12 rounded-3xl border border-gray-800 shadow-2xl text-white">
     
-    <div class="mb-12 max-w-2xl mx-auto">
-        <div class="w-full h-2 bg-gradient-to-r from-transparent via-cyan-500 to-transparent shadow-[0_10px_30px_rgba(66,165,245,0.5)] rounded-full"></div>
-        <p class="text-center text-gray-500 text-xs mt-4 tracking-[0.3em] uppercase">Pantalla {{ $tipoSala }}</p>
+    <div class="mb-14 w-full max-w-4xl mx-auto">
+        <div class="w-full h-3 bg-gradient-to-r from-transparent via-cyan-500 to-transparent shadow-[0_15px_40px_rgba(66,165,245,0.6)] rounded-full"></div>
+        <p class="text-center text-gray-500 text-sm mt-6 tracking-[0.5em] uppercase font-bold">Pantalla {{ $tipoSala }}</p>
     </div>
 
-    <div class="overflow-x-auto pb-8 custom-scrollbar">
-        <div class="min-w-max flex flex-col gap-4 items-center px-4">
+    <div class="overflow-x-auto pb-12 custom-scrollbar">
+        <div class="min-w-max flex flex-col gap-4 md:gap-6 items-center px-4">
+            
             @foreach (collect($asientos)->groupBy('fila') as $fila => $asientosFila)
-                <div class="flex items-center gap-2 md:gap-4">
-                    <span class="text-gray-400 font-bold w-6 text-center text-sm">{{ $fila }}</span>
+                <div class="flex items-center gap-3 md:gap-6 lg:gap-8">
+                    <span class="text-gray-400 font-bold w-6 text-center text-sm lg:text-base">{{ $fila }}</span>
                     
-                    <div class="flex gap-2">
+                    <div class="flex gap-2 sm:gap-3 md:gap-4 lg:gap-5">
                         @foreach ($asientosFila as $asiento)
                             <button 
                                 wire:click="seleccionarAsiento('{{ $asiento['id'] }}')"
                                 @class([
-                                    'relative rounded-t-xl rounded-b-md flex items-center justify-center font-bold text-xs md:text-sm transition-all duration-300 transform hover:-translate-y-1',
-                                    'w-8 h-8 md:w-10 md:h-10' => ($asiento['estatus'] !== 'seleccionado'), // Tamaño normal
-                                    'w-10 h-10 md:w-12 md:h-12 z-10' => ($asiento['estatus'] === 'seleccionado'), // Un poco más grande al seleccionar
+                                    'relative rounded-t-xl rounded-b-md flex items-center justify-center font-bold transition-colors duration-300 border-2 border-transparent',
+                                    'w-9 h-9 text-[10px] sm:w-10 sm:h-10 sm:text-xs md:w-11 md:h-11 lg:w-12 lg:h-12 lg:text-sm', 
                                     
-                                    // Verde Neón (Disponible)
                                     'bg-green-500 hover:bg-green-400 text-green-900 shadow-[0_0_10px_rgba(34,197,94,0.3)]' => $asiento['estatus'] === 'disponible',
-                                    
-                                    // Tu Selección (Azul Neón Brillo)
-                                    'bg-blue-600 border-2 border-blue-400 text-white shadow-[0_0_20px_rgba(37,99,235,0.6)] scale-110' => $asiento['estatus'] === 'seleccionado',
-                                    
-                                    // Vendido (Rojo Oscuro Apagado)
+                                    'bg-blue-600 border-blue-400 text-white shadow-[0_0_20px_rgba(37,99,235,0.6)]' => $asiento['estatus'] === 'seleccionado',
                                     'bg-red-600 cursor-not-allowed opacity-50' => $asiento['estatus'] === 'vendido',
-                                    
-                                    // Bloqueado por otro (Gris Candado)
-                                    'bg-gray-600 cursor-not-allowed border border-gray-500' => $asiento['estatus'] === 'bloqueado',
+                                    'bg-gray-600 cursor-not-allowed border-gray-500' => $asiento['estatus'] === 'bloqueado',
                                 ])
                                 {{ in_array($asiento['estatus'], ['vendido', 'bloqueado']) ? 'disabled' : '' }}
                             >
@@ -253,16 +226,16 @@ new class extends Component
                         @endforeach
                     </div>
                     
-                    <span class="text-gray-400 font-bold w-6 text-center text-sm hidden md:block">{{ $fila }}</span>
+                    <span class="text-gray-400 font-bold w-6 text-center text-sm lg:text-base hidden md:block">{{ $fila }}</span>
                 </div>
             @endforeach
         </div>
     </div>
 
     <div class="bg-[#151E2E] p-4 md:p-6 rounded-2xl border border-gray-800 flex flex-wrap justify-center gap-4 md:gap-6 text-xs md:text-sm text-gray-400 mt-4">
-        <div class="flex items-center gap-2"><div class="w-4 h-4 rounded-full bg-green-500"></div> Disponible</div>
-        <div class="flex items-center gap-2"><div class="w-4 h-4 rounded-full bg-blue-600 border border-blue-400"></div> Tu Selección</div>
-        <div class="flex items-center gap-2"><div class="w-4 h-4 rounded-full bg-gray-600 flex items-center justify-center text-[10px] text-white"><i class="bi bi-lock-fill"></i></div> En Proceso (WebSockets)</div>
+        <div class="flex items-center gap-2"><div class="w-4 h-4 rounded-full bg-green-500 shadow-[0_0_5px_rgba(34,197,94,0.5)]"></div> Disponible</div>
+        <div class="flex items-center gap-2"><div class="w-4 h-4 rounded-full bg-blue-600 border border-blue-400 shadow-[0_0_5px_rgba(37,99,235,0.5)]"></div> Tu Selección</div>
+        <div class="flex items-center gap-2"><div class="w-4 h-4 rounded-full bg-gray-600 flex items-center justify-center text-[10px] text-white"><i class="bi bi-lock-fill"></i></div> En Proceso</div>
         <div class="flex items-center gap-2"><div class="w-4 h-4 rounded-full bg-red-600"></div> Vendido</div>
     </div>
 
@@ -273,16 +246,4 @@ new class extends Component
             </button>
         </div>
     @endif
-
 </div>
-
-<style>
-    /* Estilo para navegadores WebKit (Chrome, Safari, Edge) */
-    .custom-scrollbar::-webkit-scrollbar { height: 8px; /* Grosor de barra horizontal */ }
-    .custom-scrollbar::-webkit-scrollbar-track { background: #0B0F19; border-radius: 10px; }
-    .custom-scrollbar::-webkit-scrollbar-thumb { background: #1f2937; /* Color de la barra gris oscuro */ border-radius: 10px; border: 2px solid #0B0F19; /* Espaciado */ }
-    .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #374151; /* Color al pasar mouse */ }
-
-    /* Estilo para Firefox */
-    .custom-scrollbar { scrollbar-width: thin; scrollbar-color: #1f2937 #0B0F19; }
-</style>
