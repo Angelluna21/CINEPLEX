@@ -30,3 +30,15 @@ class Funcion extends Model
         return $this->belongsTo(Pelicula::class, 'pelicula_id');
     }
 }
+
+public function estaAgotada()
+{
+    // Contamos cuántos asientos tienen estatus 'ocupado' para esta función
+    $vendidos = \Illuminate\Support\Facades\DB::table('funcion_asiento')
+        ->where('funcion_id', $this->id)
+        ->where('status', 'ocupado')
+        ->count();
+
+    // Si los vendidos son iguales o mayores a la capacidad de la sala, está agotada
+    return $vendidos >= $this->sala->capacidad;
+}
