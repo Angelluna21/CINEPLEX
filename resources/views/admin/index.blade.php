@@ -24,7 +24,7 @@
             </h1>
             <div class="flex items-center gap-6">
                 <div class="flex items-center gap-3">
-                    <span class="text-sm text-gray-400">Bienvenida, <span class="text-white font-bold">Sofía</span></span>
+                    <span class="text-sm text-gray-400">Bienvenido/a, <span class="text-white font-bold">{{ auth()->user()->name }}</span></span>
                     <div class="w-10 h-10 rounded-full bg-gradient-to-br from-pink-500 to-blue-500 p-0.5 shadow-lg">
                         <div class="w-full h-full rounded-full bg-[#0B0F19] flex items-center justify-center">
                             <i class="bi bi-person-fill text-gray-300"></i>
@@ -67,6 +67,7 @@
                 <p class="text-gray-500 text-sm">Categorías y etiquetas</p>
             </a>
 
+            @if(auth()->user()->role === 'admin')
             <a href="{{ route('sucursales.index') }}" class="group glass-card p-10 rounded-3xl transition-all duration-300 hover:border-green-500 hover:shadow-[0_0_30px_rgba(34,197,94,0.2)] text-center">
                 <div class="w-20 h-20 bg-green-500/10 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 group-hover:bg-green-500/20 transition-all">
                     <i class="bi bi-geo-alt text-4xl text-green-500"></i>
@@ -82,6 +83,7 @@
                 <h3 class="text-2xl font-bold mb-2 uppercase">Salas</h3>
                 <p class="text-gray-500 text-sm">Distribución y capacidades</p>
             </a>
+            @endif
 
             <a href="{{ route('funciones.index') }}" class="group glass-card p-10 rounded-3xl transition-all duration-300 hover:border-[#FF9800] hover:shadow-[0_0_30px_rgba(255,152,0,0.2)] text-center">
                 <div class="w-20 h-20 bg-[#FF9800]/10 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 group-hover:bg-[#FF9800]/20 transition-all">
@@ -91,6 +93,7 @@
                 <p class="text-gray-500 text-sm">Horarios y cartelera</p>
             </a>
 
+            @if(auth()->user()->role === 'admin')
             <a href="{{ route('usuarios.index') }}" class="group glass-card p-10 rounded-3xl transition-all duration-300 hover:border-purple-500 hover:shadow-[0_0_30px_rgba(168,85,247,0.2)] text-center">
                 <div class="w-20 h-20 bg-purple-500/10 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 group-hover:bg-purple-500/20 transition-all">
                     <i class="bi bi-people text-4xl text-purple-500"></i>
@@ -98,6 +101,7 @@
                 <h3 class="text-2xl font-bold mb-2 uppercase">Usuarios</h3>
                 <p class="text-gray-500 text-sm">Total: {{ $countUsuarios ?? 0 }} empleados</p>
             </a>
+            @endif
 
         </div>
 

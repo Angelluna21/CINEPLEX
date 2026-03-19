@@ -40,6 +40,16 @@
                     id="email" name="email" type="email" value="{{ old('email', $usuario->email) }}" required>
             </div>
 
+            <div class="mb-4">
+                <label class="block text-gray-700 text-sm font-bold mb-2" for="role">
+                    Rol
+                </label>
+                <select id="role" name="role" required class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                    <option value="empleado" {{ old('role', $usuario->role) == 'empleado' ? 'selected' : '' }}>Empleado</option>
+                    <option value="admin" {{ old('role', $usuario->role) == 'admin' ? 'selected' : '' }}>Administrador</option>
+                </select>
+            </div>
+
             <div class="mb-6">
                 <label class="block text-gray-700 text-sm font-bold mb-2" for="password">
                     Nueva Contraseña (Opcional)
