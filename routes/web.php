@@ -102,6 +102,18 @@ Route::get('/pelicula/{id}', function ($id) {
 })->name('pelicula.detalle');
 
 Route::get('/comprar/{funcion_id}', function ($funcion_id) {
+    // 1. EL BARRENDERO AUTOMÁTICO
+    // Calculamos qué hora era hace 5 minutos
+    $limiteTiempo = \Carbon\Carbon::now()->subMinutes(5);
+    
+    // Buscamos asientos que se quedaron "atorados" en estatus reservado 
+    // y que fueron creados antes de ese límite de tiempo, y los borramos.
+    \Illuminate\Support\Facades\DB::table('funcion_asiento')
+        ->where('status', 'reservado') // Solo borra los no pagados
+        ->where('created_at', '<', $limiteTiempo)
+        ->delete();
+
+    // 2. Proceso normal de cargar la página
     // Buscamos la función con los datos de su película y su sala
     $funcion = App\Models\Funcion::with(['pelicula', 'sala'])->findOrFail($funcion_id);
     

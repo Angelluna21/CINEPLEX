@@ -3,7 +3,7 @@
 @section('title', 'Elegir Asientos - Cineplex')
 
 @section('content')
-<div class="max-w-5xl mx-auto mt-8 px-4 pb-16">
+<div class="w-full bg-[#0B0F19] p-4 md:p-8 lg:p-12 xl:p-16 rounded-3xl border border-gray-800 shadow-2xl text-white">
     
     <div class="bg-cinecard rounded-3xl p-6 border border-gray-800 shadow-xl mb-8 flex flex-col md:flex-row items-center gap-6">
         @if($funcion->pelicula->imagen_url)

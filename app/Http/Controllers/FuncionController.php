@@ -16,20 +16,18 @@ class FuncionController extends Controller
     }
 
     public function create()
-    {
-        // Traemos todas las películas
-        $peliculas = Pelicula::all();
-        
-        // EL CANDADO: Solo traemos las salas que estén 'Disponible'
-        $salas = Sala::where('estatus', 'Disponible')->get(); 
+{
+    $peliculas = Pelicula::all();
+    
+    // Aquí está la magia: Filtramos desde el origen
+    $salas = Sala::where('estatus', 'Disponible')->with('sucursal')->get();
 
-        // Creamos la fecha de hoy (mínima) y la fecha máxima (1 mes en el futuro)
-        $minDate = \Carbon\Carbon::now()->format('Y-m-d');
-        $maxDate = \Carbon\Carbon::now()->addMonth()->format('Y-m-d'); // <-- AQUÍ ESTÁ LA NUEVA VARIABLE
+    // Calculamos el rango de fechas (1 mes máximo)
+    $minDate = \Carbon\Carbon::now()->format('Y-m-d');
+    $maxDate = \Carbon\Carbon::now()->addMonth()->format('Y-m-d');
 
-        // IMPORTANTE: Agregamos 'maxDate' al compact para que viaje a la vista
-        return view('admin.funciones.create', compact('peliculas', 'salas', 'minDate', 'maxDate'));
-    }
+    return view('admin.funciones.create', compact('peliculas', 'salas', 'minDate', 'maxDate'));
+}
 
     public function store(Request $request)
     {
