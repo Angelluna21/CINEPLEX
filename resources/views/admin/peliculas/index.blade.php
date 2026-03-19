@@ -39,7 +39,7 @@
         </div>
 
         <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6" id="contenedorPeliculas">
-            @forelse($peliculas as $pelicula)
+        @forelse($peliculas as $pelicula)
             <div class="tarjeta-pelicula bg-[#0B0F19] rounded-2xl border border-gray-800 hover:border-[#E91E63]/50 transition-all group flex flex-col overflow-hidden shadow-lg" data-titulo="{{ strtolower($pelicula->titulo) }}">
                 
                 <div class="aspect-[2/3] bg-gray-900 flex items-center justify-center relative overflow-hidden">
@@ -49,23 +49,31 @@
                         <i class="bi bi-film text-gray-700 text-6xl"></i>
                     @endif
                     
-                    <div class="absolute top-3 right-3 bg-black/80 backdrop-blur-sm border border-gray-700 text-white text-[10px] font-bold px-2 py-1 rounded uppercase shadow-lg">
-                        {{ $pelicula->estatus }}
+                    <div class="absolute top-3 right-3 bg-black/80 backdrop-blur-sm border border-gray-700 text-white text-[10px] font-bold px-2 py-1 rounded uppercase shadow-lg z-10">
+                        {{ $pelicula->clasificacion }}
                     </div>
                 </div>
                 
                 <div class="p-5 flex-1 flex flex-col">
                     <h3 class="text-lg font-bold mb-3 leading-tight line-clamp-2 hover:text-[#42A5F5] transition-colors">{{ $pelicula->titulo }}</h3>
                     
-                    <div class="flex flex-wrap gap-2 mb-4">
+                    <div class="flex flex-col gap-2 mb-4">
                         @if($pelicula->idioma && $pelicula->formato)
-                            <span class="text-[11px] bg-purple-500/10 px-3 py-1.5 rounded-md border border-purple-500/30 text-purple-400 font-black uppercase tracking-widest flex items-center gap-2 shadow-inner">
-                                <i class="bi bi-translate text-sm"></i> 
-                                {{ $pelicula->idioma }} 
-                                <span class="text-purple-500/40 px-1">|</span> 
-                                {{ $pelicula->formato }}
-                            </span>
+                            <div class="flex">
+                                <span class="text-[11px] bg-purple-500/10 px-3 py-1.5 rounded-md border border-purple-500/30 text-purple-400 font-black uppercase tracking-widest flex items-center gap-2 shadow-inner">
+                                    <i class="bi bi-translate text-sm"></i> 
+                                    {{ $pelicula->idioma }} 
+                                    <span class="text-purple-500/40 px-1">|</span> 
+                                    {{ $pelicula->formato }}
+                                </span>
+                            </div>
                         @endif
+                        
+                        <div class="flex mt-1">
+                            <span class="bg-[#E91E63]/10 border border-[#E91E63]/50 text-[#E91E63] text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest shadow-sm">
+                                <i class="bi bi-info-circle mr-1"></i> {{ $pelicula->estatus }}
+                            </span>
+                        </div>
                     </div>
                     
                     <div class="mt-auto flex justify-between items-center pt-4 border-t border-gray-800">
