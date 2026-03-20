@@ -1,0 +1,12 @@
+{
+    "0": "HTTP\/1.1 404 Not Found",
+    "Date": "Thu, 19 Mar 2026 16:49:23 GMT",
+    "Content-Type": "application\/json",
+    "Content-Length": "37",
+    "Connection": "close",
+    "Set-Cookie": "__cf_bm=FRvKn6WyOmppQJ9uew_fOzenkJeUxpKz4ilM0A9tvNE-1773938963-1.0.1.1-XYAYZJohzGiCrL2xQ3S_mvCjC0eQdz2xQeFcYbcTCSlDcb4p_LvYAcmcv8PxGaKEHQg1wzgfWU4vNWS16rpfopTmR70va4F42ZdFQ8cQcO8; path=\/; expires=Thu, 19-Mar-26 17:19:23 GMT; domain=.supabase.co; HttpOnly; Secure",
+    "Strict-Transport-Security": "max-age=31536000; includeSubDomains; preload",
+    "Server": "cloudflare",
+    "CF-RAY": "9dedf85cbb5c9a48-MEX",
+    "alt-svc": "h3=\":443\"; ma=86400"
+}
