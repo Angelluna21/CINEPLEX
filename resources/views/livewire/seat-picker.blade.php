@@ -13,7 +13,7 @@ new class extends Component
     public $funcionId;    
     public $sessionId;    
     public $asientos = []; 
-    public $filasAgrupadas = []; // <-- Variable para que la vista cargue rapidísimo
+    public $filasAgrupadas = []; 
     public $misSelecciones = []; 
     public $tipoSala = ''; 
 
@@ -43,7 +43,6 @@ new class extends Component
             ->orderBy('numero', 'asc')
             ->get();
 
-        // 1. Si la sala está vacía, creamos los asientos por primera vez (INSERCIÓN MASIVA)
         if ($asientosDB->isEmpty()) {
             $asientosPorFila = ($capacidad > 160) ? 20 : (($capacidad > 100) ? 15 : 10);
             $totalFilas = ceil($capacidad / $asientosPorFila);
@@ -68,7 +67,6 @@ new class extends Component
                 }
             }
 
-            // Guardamos todos de un solo golpe en la BD (1 consulta en vez de 150)
             Asiento::insert($asientosNuevos); 
 
             $asientosDB = Asiento::where('sala_id', $salaId)
@@ -77,13 +75,11 @@ new class extends Component
                 ->get();
         }
 
-        // 2. Traer el estado actual de las reservaciones
         $reservaciones = DB::table('funcion_asiento')
             ->where('funcion_id', $this->funcionId)
             ->get()
             ->keyBy('asiento_id');
 
-        // 3. Reconstruir matriz plana (para la lógica) y agrupada (para la vista)
         $this->asientos = []; 
         $this->filasAgrupadas = []; 
 
@@ -111,14 +107,12 @@ new class extends Component
                 }
             }
 
-            // Arreglo para manipular los clics rápido
             $this->asientos[$idStr] = [
                 'db_id' => $asiento->id,
                 'estatus' => $estatus,
                 'bloqueado_por' => $bloqueadoPor,
             ];
 
-            // Arreglo ya pre-ordenado para que Blade no trabaje extra
             $this->filasAgrupadas[$asiento->fila][] = [
                 'id' => $idStr,
                 'numero' => $asiento->numero
@@ -138,7 +132,6 @@ new class extends Component
         }
 
         if (in_array($id, $this->misSelecciones)) {
-            // Deseleccionar asiento
             $this->misSelecciones = array_diff($this->misSelecciones, [$id]);
             $this->asientos[$id]['estatus'] = 'disponible';
             $this->asientos[$id]['bloqueado_por'] = null;
@@ -149,7 +142,6 @@ new class extends Component
                 ->where('session_id', $this->sessionId)
                 ->delete();
         } else {
-            // Seleccionar asiento
             if(count($this->misSelecciones) >= 10) return; 
 
             $existe = DB::table('funcion_asiento')
@@ -178,11 +170,18 @@ new class extends Component
         }
     }
 
+    public function procederAlPago()
+    {
+        if (count($this->misSelecciones) === 0) return;
+        
+        session()->flash('error', '⚠️ El sistema de pagos se encuentra en reparación. Lamentamos los inconvenientes.');
+    }
+
     #[On('echo:sala.{funcionId},SeatSelected')]
     public function procesarBloqueoDeOtroUsuario($event)
     {
         $asientoId = $event['asiento_id'];
-        if (!in_array($asientoId, $this->misSelecciones)) {
+        if (isset($this->asientos[$asientoId]) && !in_array($asientoId, $this->misSelecciones)) {
             $this->asientos[$asientoId]['estatus'] = 'bloqueado';
             $this->asientos[$asientoId]['bloqueado_por'] = $event['session_id'];
         }
@@ -196,6 +195,12 @@ new class extends Component
         <div class="w-full h-3 bg-gradient-to-r from-transparent via-cyan-500 to-transparent shadow-[0_15px_40px_rgba(66,165,245,0.6)] rounded-full"></div>
         <p class="text-center text-gray-500 text-sm mt-6 tracking-[0.5em] uppercase font-bold">Pantalla {{ $tipoSala }}</p>
     </div>
+
+    @if (session()->has('error'))
+        <div class="mb-6 p-4 bg-red-500/10 border border-red-500 text-red-500 rounded-xl text-center">
+            {{ session('error') }}
+        </div>
+    @endif
 
     <div class="overflow-x-auto pb-12 custom-scrollbar">
         <div class="min-w-max flex flex-col gap-4 md:gap-6 items-center px-4">
@@ -251,9 +256,19 @@ new class extends Component
 
     @if(count($misSelecciones) > 0)
         <div class="mt-8 text-center">
-            <button class="bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-bold py-3 md:py-4 px-8 md:px-12 rounded-full hover:scale-105 transition-all shadow-[0_0_20px_rgba(66,165,245,0.4)] text-lg uppercase tracking-wider">
-                Proceder al Pago ({{ count($misSelecciones) }} boletos)
+            <button 
+                wire:click="procederAlPago"
+                wire:loading.attr="disabled"
+                class="bg-gradient-to-r from-gray-600 to-gray-800 text-white font-bold py-3 md:py-4 px-8 md:px-12 rounded-full hover:scale-105 transition-all shadow-[0_0_20px_rgba(0,0,0,0.4)] text-lg uppercase tracking-wider"
+            >
+                <span wire:loading.remove>
+                    Proceder al Pago ({{ count($misSelecciones) }} boletos)
+                </span>
+                <span wire:loading>
+                    <i class="bi bi-arrow-repeat animate-spin"></i> Procesando...
+                </span>
             </button>
         </div>
     @endif
+
 </div>
