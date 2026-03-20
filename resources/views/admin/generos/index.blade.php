@@ -12,7 +12,7 @@
     <div class="max-w-5xl mx-auto mb-6 flex justify-between items-center">
         <a href="{{ route('admin.dashboard') }}" class="group inline-flex items-center gap-2 bg-gray-800/40 hover:bg-[#E91E63] text-white px-4 py-2 rounded-xl border border-gray-700 transition-all shadow-lg">
             <i class="bi bi-arrow-left-circle-fill text-xl"></i>
-            <span class="font-bold text-xs uppercase tracking-wider">Dashboard</span>
+            <span class="font-bold text-xs uppercase tracking-wider">Atrás</span>
         </a>
         <a href="{{ route('generos.create') }}" class="bg-[#E91E63] hover:bg-pink-600 text-white px-6 py-2.5 rounded-full font-bold transition-all shadow-lg hover:scale-105 uppercase tracking-widest text-xs">
             + Nuevo Género
@@ -35,6 +35,13 @@
             <div class="m-6 p-4 bg-green-500/10 border border-green-500/50 text-green-400 rounded-xl flex items-center gap-3">
                 <i class="bi bi-check-circle-fill"></i>
                 <span class="text-sm font-bold">{{ session('success') }}</span>
+            </div>
+        @endif
+
+        @if(session('error'))
+            <div class="m-6 p-4 bg-red-500/10 border border-red-500/50 text-red-400 rounded-xl flex items-center gap-3 shadow-[0_0_15px_rgba(239,68,68,0.2)]">
+                <i class="bi bi-shield-fill-x text-xl"></i>
+                <span class="text-sm font-bold">{{ session('error') }}</span>
             </div>
         @endif
 

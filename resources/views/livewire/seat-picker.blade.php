@@ -13,6 +13,7 @@ new class extends Component
     public $funcionId;    
     public $sessionId;    
     public $asientos = []; 
+    public $filasAgrupadas = []; // <-- Variable para que la vista cargue rapidísimo
     public $misSelecciones = []; 
     public $tipoSala = ''; 
 
@@ -37,58 +38,55 @@ new class extends Component
     // LÓGICA CONECTADA A LA BASE DE DATOS
     public function generarMapaDeAsientos($salaId, $capacidad)
     {
-        // 1. Consultar asientos existentes con ORDEN ESTRICTO
         $asientosDB = Asiento::where('sala_id', $salaId)
             ->orderBy('fila', 'asc')
             ->orderBy('numero', 'asc')
             ->get();
 
-        // 2. Si la sala está vacía, creamos los asientos por primera vez
+        // 1. Si la sala está vacía, creamos los asientos por primera vez (INSERCIÓN MASIVA)
         if ($asientosDB->isEmpty()) {
-            $asientosPorFila = 10;
-            if ($capacidad > 100 && $capacidad <= 160) {
-                $asientosPorFila = 15;
-            } elseif ($capacidad > 160) {
-                $asientosPorFila = 20;
-            }
-
+            $asientosPorFila = ($capacidad > 160) ? 20 : (($capacidad > 100) ? 15 : 10);
             $totalFilas = ceil($capacidad / $asientosPorFila);
             $letras = range('A', 'Z');
             
+            $asientosNuevos = [];
             $asientosGenerados = 0;
 
             for ($f = 0; $f < $totalFilas; $f++) {
-                $fila = $letras[$f];
-                
                 for ($i = 1; $i <= $asientosPorFila; $i++) {
                     if ($asientosGenerados >= $capacidad) break;
 
-                    // Usamos CREATE uno por uno para que el contador de ID de Postgres se actualice bien
-                    Asiento::create([
+                    $asientosNuevos[] = [
                         'sala_id' => $salaId,
-                        'fila' => $fila,
+                        'fila' => $letras[$f],
                         'numero' => $i,
                         'tipo' => 'Tradicional',
-                    ]);
+                        'created_at' => now(), 
+                        'updated_at' => now(),
+                    ];
                     $asientosGenerados++;
                 }
             }
 
-            // Volvemos a consultar después de crear para tener los datos reales
+            // Guardamos todos de un solo golpe en la BD (1 consulta en vez de 150)
+            Asiento::insert($asientosNuevos); 
+
             $asientosDB = Asiento::where('sala_id', $salaId)
                 ->orderBy('fila', 'asc')
                 ->orderBy('numero', 'asc')
                 ->get();
         }
 
-        // 3. Traer el estado actual de las reservaciones
+        // 2. Traer el estado actual de las reservaciones
         $reservaciones = DB::table('funcion_asiento')
             ->where('funcion_id', $this->funcionId)
             ->get()
             ->keyBy('asiento_id');
 
-        // 4. Reconstruir matriz para la vista
-        $this->asientos = []; // Limpiamos antes de llenar
+        // 3. Reconstruir matriz plana (para la lógica) y agrupada (para la vista)
+        $this->asientos = []; 
+        $this->filasAgrupadas = []; 
+
         foreach ($asientosDB as $asiento) {
             $idStr = $asiento->fila . $asiento->numero;
             $estatus = 'disponible';
@@ -113,13 +111,17 @@ new class extends Component
                 }
             }
 
+            // Arreglo para manipular los clics rápido
             $this->asientos[$idStr] = [
                 'db_id' => $asiento->id,
-                'id' => $idStr,
-                'fila' => $asiento->fila,
-                'numero' => $asiento->numero,
                 'estatus' => $estatus,
                 'bloqueado_por' => $bloqueadoPor,
+            ];
+
+            // Arreglo ya pre-ordenado para que Blade no trabaje extra
+            $this->filasAgrupadas[$asiento->fila][] = [
+                'id' => $idStr,
+                'numero' => $asiento->numero
             ];
         }
     }
@@ -136,6 +138,7 @@ new class extends Component
         }
 
         if (in_array($id, $this->misSelecciones)) {
+            // Deseleccionar asiento
             $this->misSelecciones = array_diff($this->misSelecciones, [$id]);
             $this->asientos[$id]['estatus'] = 'disponible';
             $this->asientos[$id]['bloqueado_por'] = null;
@@ -146,6 +149,7 @@ new class extends Component
                 ->where('session_id', $this->sessionId)
                 ->delete();
         } else {
+            // Seleccionar asiento
             if(count($this->misSelecciones) >= 10) return; 
 
             $existe = DB::table('funcion_asiento')
@@ -196,28 +200,34 @@ new class extends Component
     <div class="overflow-x-auto pb-12 custom-scrollbar">
         <div class="min-w-max flex flex-col gap-4 md:gap-6 items-center px-4">
             
-            @foreach (collect($asientos)->groupBy('fila') as $fila => $asientosFila)
-                <div class="flex items-center gap-3 md:gap-6 lg:gap-8">
+            @foreach ($filasAgrupadas as $fila => $asientosFila)
+                <div wire:key="fila-{{ $fila }}" class="flex items-center gap-3 md:gap-6 lg:gap-8">
                     <span class="text-gray-400 font-bold w-6 text-center text-sm lg:text-base">{{ $fila }}</span>
                     
                     <div class="flex gap-2 sm:gap-3 md:gap-4 lg:gap-5">
                         @foreach ($asientosFila as $asiento)
+                            @php
+                                $estatus = $asientos[$asiento['id']]['estatus'];
+                            @endphp
+
                             <button 
+                                wire:key="btn-{{ $asiento['id'] }}"
                                 wire:click="seleccionarAsiento('{{ $asiento['id'] }}')"
+                                wire:loading.attr="disabled"
                                 @class([
                                     'relative rounded-t-xl rounded-b-md flex items-center justify-center font-bold transition-colors duration-300 border-2 border-transparent',
                                     'w-9 h-9 text-[10px] sm:w-10 sm:h-10 sm:text-xs md:w-11 md:h-11 lg:w-12 lg:h-12 lg:text-sm', 
                                     
-                                    'bg-green-500 hover:bg-green-400 text-green-900 shadow-[0_0_10px_rgba(34,197,94,0.3)]' => $asiento['estatus'] === 'disponible',
-                                    'bg-blue-600 border-blue-400 text-white shadow-[0_0_20px_rgba(37,99,235,0.6)]' => $asiento['estatus'] === 'seleccionado',
-                                    'bg-red-600 cursor-not-allowed opacity-50' => $asiento['estatus'] === 'vendido',
-                                    'bg-gray-600 cursor-not-allowed border-gray-500' => $asiento['estatus'] === 'bloqueado',
+                                    'bg-green-500 hover:bg-green-400 text-green-900 shadow-[0_0_10px_rgba(34,197,94,0.3)]' => $estatus === 'disponible',
+                                    'bg-blue-600 border-blue-400 text-white shadow-[0_0_20px_rgba(37,99,235,0.6)]' => $estatus === 'seleccionado',
+                                    'bg-red-600 cursor-not-allowed opacity-50' => $estatus === 'vendido',
+                                    'bg-gray-600 cursor-not-allowed border-gray-500' => $estatus === 'bloqueado',
                                 ])
-                                {{ in_array($asiento['estatus'], ['vendido', 'bloqueado']) ? 'disabled' : '' }}
+                                {{ in_array($estatus, ['vendido', 'bloqueado']) ? 'disabled' : '' }}
                             >
-                                @if($asiento['estatus'] === 'bloqueado')
+                                @if($estatus === 'bloqueado')
                                     <i class="bi bi-lock-fill text-gray-300"></i>
-                                @elseif($asiento['estatus'] === 'seleccionado')
+                                @elseif($estatus === 'seleccionado')
                                     <i class="bi bi-check-lg text-white"></i>
                                 @else
                                     {{ $asiento['numero'] }}
@@ -241,7 +251,7 @@ new class extends Component
 
     @if(count($misSelecciones) > 0)
         <div class="mt-8 text-center">
-            <button class="bg-gradient-to-r from-cinecyan to-blue-600 text-white font-bold py-3 md:py-4 px-8 md:px-12 rounded-full hover:scale-105 transition-all shadow-[0_0_20px_rgba(66,165,245,0.4)] text-lg uppercase tracking-wider">
+            <button class="bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-bold py-3 md:py-4 px-8 md:px-12 rounded-full hover:scale-105 transition-all shadow-[0_0_20px_rgba(66,165,245,0.4)] text-lg uppercase tracking-wider">
                 Proceder al Pago ({{ count($misSelecciones) }} boletos)
             </button>
         </div>
