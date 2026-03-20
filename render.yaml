@@ -1,0 +1,23 @@
+services:
+  - type: web
+    name: cineplex
+    runtime: php
+    buildCommand: ./build.sh
+    startCommand: apache2-foreground
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: APP_DEBUG
+        value: "false"
+      - key: LOG_CHANNEL
+        value: stderr
+      - key: DB_CONNECTION
+        fromDatabase:
+          name: cineplex-db # Example, user might need to change this if they use Render PostgreSQL
+          property: connectionString
+        # Since the user is using Supabase, they should probably set these manually in the dashboard
+        # but I'll leave placeholders or common names.
+      - key: DATABASE_URL
+        fromDatabase:
+          name: cineplex-db
+          property: connectionString

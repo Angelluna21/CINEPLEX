@@ -65,7 +65,18 @@ class GenreController extends Controller
 
     public function destroy(Genre $genre)
     {
+        //Revisamos si alguna película tiene el nombre de este género
+        $enUso = \App\Models\Pelicula::where('genero', $genre->nombre)->exists();
+
+        //Si está en uso, abortamos la misión y mandamos error
+        if ($enUso) {
+            return redirect()->route('generos.index')
+                ->with('error', '¡No puedes eliminar el género ' . $genre->nombre . ' porque hay películas en cartelera que lo están usando.');
+        }
+
+        // 3. Si nadie lo usa, lo eliminamos
         $genre->delete();
+        
         return redirect()->route('generos.index')->with('success', 'Género eliminado de la base de datos.');
     }
 }

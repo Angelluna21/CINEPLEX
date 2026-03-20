@@ -119,6 +119,7 @@ Route::get('/comprar/{funcion_id}', function ($funcion_id) {
     
     return view('comprar', compact('funcion'));
 })->name('comprar.asientos');
+
 // ==========================================
 // PANEL ADMINISTRATIVO (PROTEGIDO CON CANDADO)
 // ==========================================

@@ -6,7 +6,7 @@
     <div class="mb-6">
         <a href="{{ route('admin.dashboard') }}" class="group inline-flex items-center gap-2 bg-gray-800/40 hover:bg-[#E91E63] text-white px-4 py-2 rounded-xl border border-gray-700 transition-all shadow-lg">
             <i class="bi bi-arrow-left-circle-fill text-xl transition-transform group-hover:-translate-x-1"></i>
-            <span class="font-bold text-sm uppercase tracking-wider">Volver al Panel</span>
+            <span class="font-bold text-sm uppercase tracking-wider">Atrás</span>
         </a>
     </div>
 

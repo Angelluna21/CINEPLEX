@@ -13,6 +13,7 @@ new class extends Component
     public $funcionId;    
     public $sessionId;    
     public $asientos = []; 
+    public $filasAgrupadas = []; 
     public $misSelecciones = []; 
     public $tipoSala = ''; 
 
@@ -37,58 +38,51 @@ new class extends Component
     // LÓGICA CONECTADA A LA BASE DE DATOS
     public function generarMapaDeAsientos($salaId, $capacidad)
     {
-        // 1. Consultar asientos existentes con ORDEN ESTRICTO
         $asientosDB = Asiento::where('sala_id', $salaId)
             ->orderBy('fila', 'asc')
             ->orderBy('numero', 'asc')
             ->get();
 
-        // 2. Si la sala está vacía, creamos los asientos por primera vez
         if ($asientosDB->isEmpty()) {
-            $asientosPorFila = 10;
-            if ($capacidad > 100 && $capacidad <= 160) {
-                $asientosPorFila = 15;
-            } elseif ($capacidad > 160) {
-                $asientosPorFila = 20;
-            }
-
+            $asientosPorFila = ($capacidad > 160) ? 20 : (($capacidad > 100) ? 15 : 10);
             $totalFilas = ceil($capacidad / $asientosPorFila);
             $letras = range('A', 'Z');
             
+            $asientosNuevos = [];
             $asientosGenerados = 0;
 
             for ($f = 0; $f < $totalFilas; $f++) {
-                $fila = $letras[$f];
-                
                 for ($i = 1; $i <= $asientosPorFila; $i++) {
                     if ($asientosGenerados >= $capacidad) break;
 
-                    // Usamos CREATE uno por uno para que el contador de ID de Postgres se actualice bien
-                    Asiento::create([
+                    $asientosNuevos[] = [
                         'sala_id' => $salaId,
-                        'fila' => $fila,
+                        'fila' => $letras[$f],
                         'numero' => $i,
                         'tipo' => 'Tradicional',
-                    ]);
+                        'created_at' => now(), 
+                        'updated_at' => now(),
+                    ];
                     $asientosGenerados++;
                 }
             }
 
-            // Volvemos a consultar después de crear para tener los datos reales
+            Asiento::insert($asientosNuevos); 
+
             $asientosDB = Asiento::where('sala_id', $salaId)
                 ->orderBy('fila', 'asc')
                 ->orderBy('numero', 'asc')
                 ->get();
         }
 
-        // 3. Traer el estado actual de las reservaciones
         $reservaciones = DB::table('funcion_asiento')
             ->where('funcion_id', $this->funcionId)
             ->get()
             ->keyBy('asiento_id');
 
-        // 4. Reconstruir matriz para la vista
-        $this->asientos = []; // Limpiamos antes de llenar
+        $this->asientos = []; 
+        $this->filasAgrupadas = []; 
+
         foreach ($asientosDB as $asiento) {
             $idStr = $asiento->fila . $asiento->numero;
             $estatus = 'disponible';
@@ -115,11 +109,13 @@ new class extends Component
 
             $this->asientos[$idStr] = [
                 'db_id' => $asiento->id,
-                'id' => $idStr,
-                'fila' => $asiento->fila,
-                'numero' => $asiento->numero,
                 'estatus' => $estatus,
                 'bloqueado_por' => $bloqueadoPor,
+            ];
+
+            $this->filasAgrupadas[$asiento->fila][] = [
+                'id' => $idStr,
+                'numero' => $asiento->numero
             ];
         }
     }
@@ -174,11 +170,18 @@ new class extends Component
         }
     }
 
+    public function procederAlPago()
+    {
+        if (count($this->misSelecciones) === 0) return;
+        
+        session()->flash('error', '⚠️ El sistema de pagos se encuentra en reparación. Lamentamos los inconvenientes.');
+    }
+
     #[On('echo:sala.{funcionId},SeatSelected')]
     public function procesarBloqueoDeOtroUsuario($event)
     {
         $asientoId = $event['asiento_id'];
-        if (!in_array($asientoId, $this->misSelecciones)) {
+        if (isset($this->asientos[$asientoId]) && !in_array($asientoId, $this->misSelecciones)) {
             $this->asientos[$asientoId]['estatus'] = 'bloqueado';
             $this->asientos[$asientoId]['bloqueado_por'] = $event['session_id'];
         }
@@ -193,31 +196,43 @@ new class extends Component
         <p class="text-center text-gray-500 text-sm mt-6 tracking-[0.5em] uppercase font-bold">Pantalla {{ $tipoSala }}</p>
     </div>
 
+    @if (session()->has('error'))
+        <div class="mb-6 p-4 bg-red-500/10 border border-red-500 text-red-500 rounded-xl text-center">
+            {{ session('error') }}
+        </div>
+    @endif
+
     <div class="overflow-x-auto pb-12 custom-scrollbar">
         <div class="min-w-max flex flex-col gap-4 md:gap-6 items-center px-4">
             
-            @foreach (collect($asientos)->groupBy('fila') as $fila => $asientosFila)
-                <div class="flex items-center gap-3 md:gap-6 lg:gap-8">
+            @foreach ($filasAgrupadas as $fila => $asientosFila)
+                <div wire:key="fila-{{ $fila }}" class="flex items-center gap-3 md:gap-6 lg:gap-8">
                     <span class="text-gray-400 font-bold w-6 text-center text-sm lg:text-base">{{ $fila }}</span>
                     
                     <div class="flex gap-2 sm:gap-3 md:gap-4 lg:gap-5">
                         @foreach ($asientosFila as $asiento)
+                            @php
+                                $estatus = $asientos[$asiento['id']]['estatus'];
+                            @endphp
+
                             <button 
+                                wire:key="btn-{{ $asiento['id'] }}"
                                 wire:click="seleccionarAsiento('{{ $asiento['id'] }}')"
+                                wire:loading.attr="disabled"
                                 @class([
                                     'relative rounded-t-xl rounded-b-md flex items-center justify-center font-bold transition-colors duration-300 border-2 border-transparent',
                                     'w-9 h-9 text-[10px] sm:w-10 sm:h-10 sm:text-xs md:w-11 md:h-11 lg:w-12 lg:h-12 lg:text-sm', 
                                     
-                                    'bg-green-500 hover:bg-green-400 text-green-900 shadow-[0_0_10px_rgba(34,197,94,0.3)]' => $asiento['estatus'] === 'disponible',
-                                    'bg-blue-600 border-blue-400 text-white shadow-[0_0_20px_rgba(37,99,235,0.6)]' => $asiento['estatus'] === 'seleccionado',
-                                    'bg-red-600 cursor-not-allowed opacity-50' => $asiento['estatus'] === 'vendido',
-                                    'bg-gray-600 cursor-not-allowed border-gray-500' => $asiento['estatus'] === 'bloqueado',
+                                    'bg-green-500 hover:bg-green-400 text-green-900 shadow-[0_0_10px_rgba(34,197,94,0.3)]' => $estatus === 'disponible',
+                                    'bg-blue-600 border-blue-400 text-white shadow-[0_0_20px_rgba(37,99,235,0.6)]' => $estatus === 'seleccionado',
+                                    'bg-red-600 cursor-not-allowed opacity-50' => $estatus === 'vendido',
+                                    'bg-gray-600 cursor-not-allowed border-gray-500' => $estatus === 'bloqueado',
                                 ])
-                                {{ in_array($asiento['estatus'], ['vendido', 'bloqueado']) ? 'disabled' : '' }}
+                                {{ in_array($estatus, ['vendido', 'bloqueado']) ? 'disabled' : '' }}
                             >
-                                @if($asiento['estatus'] === 'bloqueado')
+                                @if($estatus === 'bloqueado')
                                     <i class="bi bi-lock-fill text-gray-300"></i>
-                                @elseif($asiento['estatus'] === 'seleccionado')
+                                @elseif($estatus === 'seleccionado')
                                     <i class="bi bi-check-lg text-white"></i>
                                 @else
                                     {{ $asiento['numero'] }}
@@ -241,9 +256,19 @@ new class extends Component
 
     @if(count($misSelecciones) > 0)
         <div class="mt-8 text-center">
-            <button class="bg-gradient-to-r from-cinecyan to-blue-600 text-white font-bold py-3 md:py-4 px-8 md:px-12 rounded-full hover:scale-105 transition-all shadow-[0_0_20px_rgba(66,165,245,0.4)] text-lg uppercase tracking-wider">
-                Proceder al Pago ({{ count($misSelecciones) }} boletos)
+            <button 
+                wire:click="procederAlPago"
+                wire:loading.attr="disabled"
+                class="bg-gradient-to-r from-gray-600 to-gray-800 text-white font-bold py-3 md:py-4 px-8 md:px-12 rounded-full hover:scale-105 transition-all shadow-[0_0_20px_rgba(0,0,0,0.4)] text-lg uppercase tracking-wider"
+            >
+                <span wire:loading.remove>
+                    Proceder al Pago ({{ count($misSelecciones) }} boletos)
+                </span>
+                <span wire:loading>
+                    <i class="bi bi-arrow-repeat animate-spin"></i> Procesando...
+                </span>
             </button>
         </div>
     @endif
+
 </div>
