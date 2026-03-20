@@ -122,24 +122,5 @@
         </div>
     </div>
 
-    <script>
-        document.getElementById('searchInput').addEventListener('keyup', function() {
-            const searchTerm = this.value.toLowerCase();
-            const rows = document.querySelectorAll('#tableBody tr:not(#noResultsRow)');
-            
-            rows.forEach(row => {
-                // Buscamos en el título de la película (segunda celda) y en el nombre de la sala
-                const pelicula = row.querySelector('td:nth-child(2)').textContent.toLowerCase();
-                const sala = row.querySelector('.sala-nombre').textContent.toLowerCase();
-                
-                if (pelicula.includes(searchTerm) || sala.includes(searchTerm)) {
-                    row.style.display = "";
-                } else {
-                    row.style.display = "none";
-                }
-            });
-        });
-    </script>
-
 </body>
 </html>

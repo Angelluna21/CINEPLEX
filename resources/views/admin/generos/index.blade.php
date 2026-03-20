@@ -89,26 +89,5 @@
             </table>
         </div>
     </div>
-
-    <script>
-        document.getElementById('buscador').addEventListener('keyup', function() {
-            let textoBusqueda = this.value.toLowerCase();
-            let filas = document.querySelectorAll('.fila-genero');
-            let resultadosVisibles = 0;
-
-            filas.forEach(fila => {
-                let nombreGenero = fila.querySelector('.nombre-genero').textContent.toLowerCase();
-                if(nombreGenero.includes(textoBusqueda)) {
-                    fila.style.display = '';
-                    resultadosVisibles++;
-                } else {
-                    fila.style.display = 'none';
-                }
-            });
-
-            // Muestra u oculta el mensaje de "No se encontraron coincidencias"
-            document.getElementById('sinResultados').style.display = (resultadosVisibles === 0) ? '' : 'none';
-        });
-    </script>
 </body>
 </html>

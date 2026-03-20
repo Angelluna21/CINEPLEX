@@ -9,11 +9,20 @@ use Illuminate\Support\Facades\Auth; // <-- 1. Importante para que no marque err
 
 class UserController extends Controller
 {
-    public function index()
-    {
-        $usuarios = User::all();
-        return view('admin.usuarios.index', compact('usuarios'));
-    }
+    public function index(Request $request)
+{
+    $search = $request->input('search');
+
+    // Busca por nombre o por correo electrónico
+    $usuarios = User::when($search, function ($query, $search) {
+        return $query->where('name', 'like', "%{$search}%")
+                     ->orWhere('email', 'like', "%{$search}%");
+    })
+    ->orderBy('id', 'asc')
+    ->get();
+
+    return view('admin.usuarios.index', compact('usuarios', 'search'));
+}
 
     public function create()
     {

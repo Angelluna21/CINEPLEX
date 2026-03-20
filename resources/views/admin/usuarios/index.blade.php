@@ -69,30 +69,6 @@
         </div>
     </div>
 
-    <script>
-        document.getElementById('searchInput').addEventListener('keyup', function() {
-            let filter = this.value.toLowerCase();
-            let rows = document.querySelectorAll('.user-row');
-            let hasResults = false;
 
-            rows.forEach(row => {
-                let name = row.querySelector('.user-name').textContent.toLowerCase();
-                let email = row.querySelector('.user-email').textContent.toLowerCase();
-                
-                if (name.includes(filter) || email.includes(filter)) {
-                    row.style.display = "";
-                    hasResults = true;
-                } else {
-                    row.style.display = "none";
-                }
-            });
-
-            // Manejo de mensaje si no hay resultados
-            const noResultsRow = document.getElementById('noResults');
-            if(noResultsRow) {
-                noResultsRow.style.display = hasResults ? "none" : "";
-            }
-        });
-    </script>
 </body>
 </html>

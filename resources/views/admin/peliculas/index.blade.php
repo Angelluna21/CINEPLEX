@@ -113,38 +113,4 @@
     </div>
 </div>
 
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const buscador = document.getElementById('buscadorPeliculas');
-        const tarjetas = document.querySelectorAll('.tarjeta-pelicula');
-        const mensajeVacio = document.getElementById('mensajeSinResultados');
-
-        // Escuchamos cada vez que el usuario teclea algo
-        buscador.addEventListener('input', function(e) {
-            // Convertimos a minúsculas y quitamos espacios al inicio/fin
-            const textoBusqueda = e.target.value.toLowerCase().trim();
-            let tarjetasVisibles = 0;
-
-            tarjetas.forEach(tarjeta => {
-                // Obtenemos el título de la película desde el atributo data
-                const titulo = tarjeta.getAttribute('data-titulo');
-                
-                // Si el título incluye lo que escribimos, la mostramos (flex), si no, la ocultamos (none)
-                if (titulo.includes(textoBusqueda)) {
-                    tarjeta.style.display = 'flex';
-                    tarjetasVisibles++;
-                } else {
-                    tarjeta.style.display = 'none';
-                }
-            });
-
-            // Si ocultamos todas las tarjetas, mostramos el mensaje de "No hay resultados"
-            if (tarjetasVisibles === 0 && tarjetas.length > 0) {
-                mensajeVacio.classList.remove('hidden');
-            } else {
-                mensajeVacio.classList.add('hidden');
-            }
-        });
-    });
-</script>
 @endsection

@@ -100,21 +100,5 @@
         </div>
     </div>
 
-    <script>
-        document.getElementById('searchInput').addEventListener('keyup', function() {
-            let filter = this.value.toLowerCase();
-            let rows = document.querySelectorAll('#tableBody tr');
-
-            rows.forEach(row => {
-                // Obtenemos el texto del nombre (segunda celda)
-                let nameElement = row.querySelector('td:nth-child(2)');
-                if (nameElement) {
-                    let text = nameElement.textContent.toLowerCase();
-                    row.style.display = text.includes(filter) ? "" : "none";
-                }
-            });
-        });
-    </script>
-
 </body>
 </html>

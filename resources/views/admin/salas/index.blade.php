@@ -113,32 +113,6 @@
         </div>
     </div>
 
-    <script>
-        const salaSearch = document.getElementById('salaSearch');
-        const sucursalFilter = document.getElementById('sucursalFilter');
-        const rows = document.querySelectorAll('.sala-row');
 
-        function filterTable() {
-            const searchText = salaSearch.value.toLowerCase();
-            const selectedSucursal = sucursalFilter.value.toLowerCase();
-
-            rows.forEach(row => {
-                const name = row.querySelector('.sala-name').textContent.toLowerCase();
-                const sucursal = row.querySelector('.sala-sucursal').textContent.toLowerCase();
-                
-                const matchesSearch = name.includes(searchText);
-                const matchesSucursal = selectedSucursal === "" || sucursal === selectedSucursal;
-
-                if (matchesSearch && matchesSucursal) {
-                    row.style.display = "";
-                } else {
-                    row.style.display = "none";
-                }
-            });
-        }
-
-        salaSearch.addEventListener('keyup', filterTable);
-        sucursalFilter.addEventListener('change', filterTable);
-    </script>
 </body>
 </html>

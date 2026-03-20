@@ -17,7 +17,7 @@ use App\Http\Controllers\SalaController;
 use App\Http\Controllers\SucursalController;
 use App\Http\Controllers\FuncionController;
 use App\Http\Controllers\UserController;
-use App\Http\Controllers\AuthController; // <-- AÑADIDO: Controlador de Autenticación
+use App\Http\Controllers\AuthController; 
 
 // ==========================================
 // RUTAS DE AUTENTICACIÓN (LOGIN / LOGOUT)
@@ -68,7 +68,6 @@ Route::get('/', function (Request $request) {
                 $query->whereTime('hora', '>', $currentTime);
             }
         } else {
-            // Elimina del historial cualquier hora que sea menor a la hora actual
             $query->where(function ($q) use ($todayDate, $currentTime) {
                 $q->where('fecha', '>', $todayDate)
                   ->orWhere(function ($q2) use ($todayDate, $currentTime) {
@@ -80,12 +79,8 @@ Route::get('/', function (Request $request) {
         $query->orderBy('fecha')->orderBy('hora');
     };
 
-    // 3. LA SOLUCIÓN EXACTA PARA LA CARTELERA
-    // Preparamos la consulta pidiendo TODAS las películas, pero le inyectamos el filtro a sus horarios
     $queryPeliculas = App\Models\Pelicula::with(['funciones' => $filtroFunciones]);
 
-    // SOLO si el usuario filtra explícitamente por el calendario o sucursal, 
-    // entonces sí ocultamos las películas que no coinciden con su búsqueda.
     if ($fecha_filtro || $sucursal_id) {
         $queryPeliculas->whereHas('funciones', $filtroFunciones);
     }
@@ -94,42 +89,34 @@ Route::get('/', function (Request $request) {
 
     return view('welcome', compact('peliculas', 'sucursales', 'sucursal_id', 'fecha_filtro', 'fechas_con_funciones'));
 });
+
 Route::get('/pelicula/{id}', function ($id) {
-    // Agregamos 'sucursal' a la relación para que viaje con la sala
     $pelicula = App\Models\Pelicula::with('funciones.sala.sucursal')->findOrFail($id);
-    
     return view('detalle', compact('pelicula'));
 })->name('pelicula.detalle');
 
 Route::get('/comprar/{funcion_id}', function ($funcion_id) {
-    // 1. EL BARRENDERO AUTOMÁTICO
-    // Calculamos qué hora era hace 5 minutos
     $limiteTiempo = \Carbon\Carbon::now()->subMinutes(5);
-    
-    // Buscamos asientos que se quedaron "atorados" en estatus reservado 
-    // y que fueron creados antes de ese límite de tiempo, y los borramos.
     \Illuminate\Support\Facades\DB::table('funcion_asiento')
-        ->where('status', 'reservado') // Solo borra los no pagados
+        ->where('status', 'reservado') 
         ->where('created_at', '<', $limiteTiempo)
         ->delete();
 
-    // 2. Proceso normal de cargar la página
-    // Buscamos la función con los datos de su película y su sala
     $funcion = App\Models\Funcion::with(['pelicula', 'sala'])->findOrFail($funcion_id);
-    
     return view('comprar', compact('funcion'));
 })->name('comprar.asientos');
+
 // ==========================================
 // PANEL ADMINISTRATIVO (PROTEGIDO CON CANDADO)
 // ==========================================
 
 Route::middleware(['auth'])->group(function () {
     
-    // Ruta principal del Admin con conteos para las tarjetas
+    // Ruta principal del Admin (SOLO CONTEOS)
     Route::get('/admin', function () {
-        $countUsuarios = User::count();
-        $countPeliculas = Pelicula::count();
-        $countSucursales = Sucursal::count();
+        $countUsuarios = App\Models\User::count();
+        $countPeliculas = App\Models\Pelicula::count();
+        $countSucursales = App\Models\Sucursal::count();
         
         return view('admin.index', compact('countUsuarios', 'countPeliculas', 'countSucursales'));
     })->name('admin.dashboard');
