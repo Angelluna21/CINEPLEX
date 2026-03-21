@@ -11,8 +11,9 @@ class FuncionController extends Controller
 {
     public function index()
     {
-        $funciones = Funcion::with(['sala', 'pelicula'])->get();
-        return view('admin.funciones.index', compact('funciones'));
+        $funciones = Funcion::with(['sala.sucursal', 'pelicula'])->get();
+        $sucursales = \App\Models\Sucursal::all();
+        return view('admin.funciones.index', compact('funciones', 'sucursales'));
     }
 
     public function create()

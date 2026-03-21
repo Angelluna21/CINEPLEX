@@ -31,7 +31,7 @@
                 <p class="text-gray-400 text-sm mt-1">Filtrar funciones por película o sala</p>
             </div>
 
-            <div class="flex w-full md:w-auto gap-2 flex-grow max-w-md">
+            <div class="flex flex-col md:flex-row w-full md:w-auto gap-3 flex-grow max-w-xl">
                 <div class="relative w-full">
                     <i class="bi bi-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-500"></i>
                     <input type="text" 
@@ -40,6 +40,13 @@
                            autocomplete="off"
                            class="w-full bg-[#0B0F19] border border-gray-700 rounded-full py-2.5 pl-10 pr-4 text-sm focus:border-purple-500 outline-none transition-all">
                 </div>
+                
+                <select id="sucursalFilter" class="bg-[#0B0F19] border border-gray-700 rounded-full py-2.5 px-4 focus:outline-none focus:border-purple-500 text-sm text-gray-300 w-full md:w-48 appearance-none bg-no-repeat bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20width%3D%2220%22%20height%3D%2220%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Cpath%20d%3D%22M5%208l5%205%205-5%22%20fill%3D%22none%22%20stroke%3D%22%239CA3AF%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%2F%3E%3C%2Fsvg%3E')] bg-[position:calc(100%-10px)_center]">
+                    <option value="">Todas las sucursales</option>
+                    @foreach($sucursales as $sucursal)
+                        <option value="{{ $sucursal->nombre }}">{{ $sucursal->nombre }}</option>
+                    @endforeach
+                </select>
             </div>
             
             <a href="{{ route('funciones.create') }}" class="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-pink-600 hover:to-purple-600 text-white px-6 py-2.5 rounded-full font-bold transition-all shadow-lg hover:scale-105 flex items-center gap-2 whitespace-nowrap">
@@ -64,17 +71,18 @@
                     @forelse($funciones as $funcion)
                     <tr class="border-b border-gray-800 hover:bg-gray-800/30 transition-colors">
                         <td class="p-4 text-gray-500 font-mono text-sm">#{{ $funcion->id }}</td>
-                        <td class="p-4 font-bold text-gray-200">
+                        <td class="p-4 font-bold text-gray-200 pelicula-titulo">
                             {{ $funcion->pelicula->titulo ?? 'Sin título' }}
                         </td>
                         <td class="p-4">
                             <div class="flex flex-col">
                                 <span class="text-gray-200 font-semibold sala-nombre">{{ $funcion->sala->nombre ?? 'N/A' }}</span>
-                                <span class="text-[10px] text-gray-500 uppercase italic">
+                                <span class="text-[10px] text-gray-500 uppercase italic sucursal-nombre">
                                     {{ $funcion->sala->sucursal->nombre ?? 'Sucursal no asignada' }}
                                 </span>
                             </div>
-                            <td class="p-4 border-b border-gray-800">
+                        </td>
+                        <td class="p-4 border-b border-gray-800">
     @if($funcion->sala->estatus === 'Disponible')
         <span class="inline-flex items-center gap-1.5 py-1 px-3 rounded-full text-xs font-bold bg-green-500/10 text-green-400 border border-green-500/30 shadow-[0_0_10px_rgba(34,197,94,0.1)]">
             <span class="w-2 h-2 rounded-full bg-green-400 shadow-[0_0_5px_#4ade80] animate-pulse"></span>
@@ -86,7 +94,6 @@
             Fuera de servicio
         </span>
     @endif
-</td>
                         </td>
                         <td class="p-4">
                             <div class="text-purple-400 font-bold text-sm"><i class="bi bi-calendar-event mr-1"></i> {{ date('d/m/Y', strtotime($funcion->fecha)) }}</div>
@@ -119,8 +126,8 @@
                     @endforelse
                 </tbody>
             </table>
-        </div>
     </div>
 
+    <script src="{{ asset('js/admin-filters.js') }}"></script>
 </body>
 </html>

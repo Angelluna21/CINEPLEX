@@ -77,6 +77,8 @@
         </div>
     </div>
 
+    </div>
 
+    <script src="{{ asset('js/admin-filters.js') }}"></script>
 </body>
 </html>
