@@ -54,8 +54,16 @@
                         <td class="p-4 text-gray-400 user-email">{{ $user->email }}</td>
                         <td class="p-4 text-center">
                             <div class="flex justify-center gap-4">
-                                <a href="#" class="text-blue-400 hover:text-blue-200"><i class="bi bi-pencil-square text-lg"></i></a>
-                                <button class="text-red-400 hover:text-red-200"><i class="bi bi-trash3 text-lg"></i></button>
+                                <a href="{{ route('usuarios.edit', $user->id) }}" class="text-blue-400 hover:text-blue-200" title="Editar">
+                                    <i class="bi bi-pencil-square text-lg"></i>
+                                </a>
+                                <form action="{{ route('usuarios.destroy', $user->id) }}" method="POST" class="inline" onsubmit="return confirm('¿Seguro que deseas eliminar a este usuario?');">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="text-red-400 hover:text-red-200" title="Eliminar">
+                                        <i class="bi bi-trash3 text-lg"></i>
+                                    </button>
+                                </form>
                             </div>
                         </td>
                     </tr>
