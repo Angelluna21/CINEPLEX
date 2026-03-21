@@ -44,6 +44,16 @@ RUN composer install --no-interaction --no-dev --optimize-autoloader --no-script
 RUN npm install
 RUN npm run build
 
+# Crear las carpetas de framework que a menudo son ignoradas por git
+RUN mkdir -p /var/www/html/storage/framework/views \
+             /var/www/html/storage/framework/cache/data \
+             /var/www/html/storage/framework/sessions \
+             /var/www/html/storage/logs \
+             /var/www/html/bootstrap/cache
+
+# Limpiar cachés viejas o configuraciones locales (rutas de Windows) subidas por error a GitHub
+RUN rm -rf /var/www/html/bootstrap/cache/*.php
+
 # Dar permisos necesarios a las carpetas de almacenamiento y caché
 RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
 
