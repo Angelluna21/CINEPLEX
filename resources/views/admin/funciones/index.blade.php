@@ -49,10 +49,12 @@
                 </select>
             </div>
             
+            @if(auth()->user()->role === 'empleado')
             <a href="{{ route('funciones.create') }}" class="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-pink-600 hover:to-purple-600 text-white px-6 py-2.5 rounded-full font-bold transition-all shadow-lg hover:scale-105 flex items-center gap-2 whitespace-nowrap">
                 <i class="bi bi-plus-circle-fill"></i>
                 Nueva Función
             </a>
+            @endif
         </div>
 
         <div class="overflow-hidden rounded-xl border border-gray-800">
@@ -102,6 +104,7 @@
                         <td class="p-4 font-black text-green-400">
                             ${{ number_format($funcion->precio, 2) }}
                         </td>
+                        @if(auth()->user()->role === 'empleado')
                         <td class="p-4">
                             <div class="flex justify-center items-center gap-4">
                                 <a href="{{ route('funciones.edit', $funcion->id) }}" class="text-blue-400 hover:text-blue-200 transition-all">
@@ -116,6 +119,7 @@
                                 </form>
                             </div>
                         </td>
+                        @endif
                     </tr>
                     @empty
                     <tr id="noResultsRow">

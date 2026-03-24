@@ -15,12 +15,12 @@ class CheckRole
      * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
      * @param  string  $role
      */
-    public function handle(Request $request, Closure $next, string $role): Response
+    public function handle(Request $request, Closure $next, string ...$roles): Response
     {
         /** @var \App\Models\User|null $user */
         $user = Auth::user();
 
-        if (!$user || $user->role !== $role) {
+        if (!$user || !in_array($user->role, $roles)) {
             abort(403, 'No tienes permiso para acceder a esta área.');
         }
 

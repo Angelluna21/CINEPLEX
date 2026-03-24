@@ -51,6 +51,7 @@
 
         <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
             
+            @if(auth()->user()->role === 'empleado')
             <a href="{{ route('peliculas.index') }}" class="group glass-card p-10 rounded-3xl transition-all duration-300 hover:border-pink-500 hover:shadow-[0_0_30px_rgba(233,30,99,0.2)] text-center">
                 <div class="w-20 h-20 bg-pink-500/10 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 group-hover:bg-pink-500/20 transition-all">
                     <i class="bi bi-film text-4xl text-pink-500"></i>
@@ -67,7 +68,6 @@
                 <p class="text-gray-500 text-sm">Categorías y etiquetas</p>
             </a>
 
-            @if(auth()->user()->role === 'admin')
             <a href="{{ route('sucursales.index') }}" class="group glass-card p-10 rounded-3xl transition-all duration-300 hover:border-green-500 hover:shadow-[0_0_30px_rgba(34,197,94,0.2)] text-center">
                 <div class="w-20 h-20 bg-green-500/10 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 group-hover:bg-green-500/20 transition-all">
                     <i class="bi bi-geo-alt text-4xl text-green-500"></i>
@@ -83,7 +83,6 @@
                 <h3 class="text-2xl font-bold mb-2 uppercase">Salas</h3>
                 <p class="text-gray-500 text-sm">Distribución y capacidades</p>
             </a>
-            @endif
 
             <a href="{{ route('funciones.index') }}" class="group glass-card p-10 rounded-3xl transition-all duration-300 hover:border-[#FF9800] hover:shadow-[0_0_30px_rgba(255,152,0,0.2)] text-center">
                 <div class="w-20 h-20 bg-[#FF9800]/10 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 group-hover:bg-[#FF9800]/20 transition-all">
@@ -92,8 +91,17 @@
                 <h3 class="text-2xl font-bold mb-2 uppercase">Funciones</h3>
                 <p class="text-gray-500 text-sm">Horarios y cartelera</p>
             </a>
+            @endif
 
             @if(auth()->user()->role === 'admin')
+            <a href="{{ route('funciones.index') }}" class="group glass-card p-10 rounded-3xl transition-all duration-300 hover:border-[#FF9800] hover:shadow-[0_0_30px_rgba(255,152,0,0.2)] text-center">
+                <div class="w-20 h-20 bg-[#FF9800]/10 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 group-hover:bg-[#FF9800]/20 transition-all">
+                    <i class="bi bi-calendar-event text-4xl text-[#FF9800]"></i>
+                </div>
+                <h3 class="text-2xl font-bold mb-2 uppercase">Consultar Cartelera</h3>
+                <p class="text-gray-500 text-sm">Visualizar horarios y funciones</p>
+            </a>
+
             <a href="{{ route('usuarios.index') }}" class="group glass-card p-10 rounded-3xl transition-all duration-300 hover:border-purple-500 hover:shadow-[0_0_30px_rgba(168,85,247,0.2)] text-center">
                 <div class="w-20 h-20 bg-purple-500/10 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 group-hover:bg-purple-500/20 transition-all">
                     <i class="bi bi-people text-4xl text-purple-500"></i>

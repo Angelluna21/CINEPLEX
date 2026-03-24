@@ -124,17 +124,31 @@ Route::middleware(['auth'])->group(function () {
     // Agrupamos bajo 'admin/'
     Route::prefix('admin')->group(function () {
         
-        Route::get('tmdb/search', [PeliculaController::class, 'searchTmdb'])->name('tmdb.search');
-        Route::resource('peliculas', PeliculaController::class)->names('peliculas');
-        Route::resource('generos', GenreController::class)->parameters([
-            'generos' => 'genre'
-        ]);
-        Route::resource('funciones', FuncionController::class)->names('funciones');
-        
-        // Rutas exclusivas del administrador
-        Route::middleware(['role:admin'])->group(function () {
+        // ==========================================
+        // Rutas Compartidas (Gerente y Empleado)
+        // ==========================================
+        Route::middleware(['role:admin,empleado'])->group(function () {
+            Route::get('funciones', [FuncionController::class, 'index'])->name('funciones.index');
+        });
+
+        // ==========================================
+        // Rutas exclusivas del Empleado
+        // ==========================================
+        Route::middleware(['role:empleado'])->group(function () {
+            Route::get('tmdb/search', [PeliculaController::class, 'searchTmdb'])->name('tmdb.search');
+            Route::resource('peliculas', PeliculaController::class)->names('peliculas');
+            Route::resource('generos', GenreController::class)->parameters([
+                'generos' => 'genre'
+            ]);
             Route::resource('sucursales', SucursalController::class)->names('sucursales');
             Route::resource('salas', SalaController::class)->names('salas');
+            Route::resource('funciones', FuncionController::class)->except(['index'])->names('funciones');
+        });
+        
+        // ==========================================
+        // Rutas exclusivas del Gerente (Administrador)
+        // ==========================================
+        Route::middleware(['role:admin'])->group(function () {
             Route::resource('usuarios', UserController::class)->names('usuarios');
         });
     });
