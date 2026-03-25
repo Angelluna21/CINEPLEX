@@ -31,23 +31,23 @@
                 <p class="text-gray-400 text-sm mt-1">Gestión de espacios y capacidades</p>
             </div>
             
-            <div class="flex flex-col md:flex-row gap-3 w-full lg:w-auto">
-                <div class="relative">
+            <div class="flex flex-wrap gap-3 w-full lg:w-auto items-center justify-start lg:justify-end">
+                <div class="relative w-full sm:w-auto">
                     <span class="absolute inset-y-0 left-0 flex items-center pl-3">
                         <i class="bi bi-search text-gray-500"></i>
                     </span>
                     <input type="text" id="salaSearch" placeholder="Buscar sala..." 
-                        class="w-full md:w-48 bg-[#0B0F19] border border-gray-700 rounded-full py-2 pl-10 pr-4 focus:outline-none focus:border-cyan-500 transition-all text-sm">
+                        class="w-full sm:w-56 bg-[#0B0F19] border border-gray-700 rounded-full py-2 pl-10 pr-4 focus:outline-none focus:border-cyan-500 transition-all text-sm">
                 </div>
 
-                <select id="sucursalFilter" class="bg-[#0B0F19] border border-gray-700 rounded-full py-2 px-4 focus:outline-none focus:border-cyan-500 text-sm text-gray-300">
+                <select id="sucursalFilter" class="w-full sm:w-64 max-w-full bg-[#0B0F19] border border-gray-700 rounded-full py-2 px-4 focus:outline-none focus:border-cyan-500 text-sm text-gray-300">
                     <option value="">Todas las sucursales</option>
                     @foreach($sucursales as $sucursal)
                         <option value="{{ $sucursal->nombre }}">{{ $sucursal->nombre }}</option>
                     @endforeach
                 </select>
 
-                <a href="{{ route('salas.create') }}" class="bg-cyan-600 hover:bg-cyan-700 text-white px-6 py-2.5 rounded-full font-bold transition-all shadow-lg text-center">
+                <a href="{{ route('salas.create') }}" class="w-full sm:w-auto bg-cyan-600 hover:bg-cyan-700 text-white px-6 py-2.5 rounded-full font-bold transition-all shadow-lg text-center whitespace-nowrap shrink-0">
                     + Nueva Sala
                 </a>
             </div>
