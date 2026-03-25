@@ -25,19 +25,20 @@
     </style>
     
     @livewireStyles
+    @stack('styles')
 </head>
 <body class="text-white min-h-screen font-sans flex flex-col">
 
-    <nav class="border-b border-gray-800 bg-[#151E2E] p-6 mb-12 shadow-2xl">
-        <div class="max-w-7xl mx-auto flex justify-between items-center">
+    <nav class="border-b border-gray-800 bg-[#151E2E] p-4 sm:p-6 mb-8 sm:mb-12 shadow-2xl">
+        <div class="max-w-7xl mx-auto flex flex-wrap justify-between items-center gap-4">
             
             <a href="/" class="hover:opacity-80 transition-opacity">
                 <h1 class="text-3xl font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-cinecyan to-cinemagenta uppercase">
-                    CINEPLEX <span class="text-xs font-light text-gray-500 tracking-widest uppercase ml-2 hidden sm:inline">CARTELERA</span>
+                    CINEPLEX <span class="text-xs font-light text-gray-500 tracking-widest uppercase ml-2 hidden lg:inline">CARTELERA</span>
                 </h1>
             </a>
             
-            <div class="flex items-center gap-6">
+            <div class="flex items-center gap-4">
                 @yield('header-actions')
             </div>
         </div>
@@ -52,5 +53,6 @@
     </footer>
 
     @livewireScripts
+    @stack('scripts')
 </body>
 </html>

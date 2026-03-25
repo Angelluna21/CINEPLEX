@@ -3,37 +3,42 @@
 @section('title', 'Cartelera - Cineplex')
 
 @section('header-actions')
-<form action="/" method="GET" class="m-0 p-0 flex items-center gap-4">
-    <select name="sucursal" onchange="this.form.submit()" 
-        class="bg-[#0B0F19] text-white border border-gray-700 rounded px-3 py-1 font-roboto outline-none focus:border-cinecyan cursor-pointer text-sm">
-        <option value="">Todas las sucursales</option>
-        @foreach($sucursales as $sucursal)
-            <option value="{{ $sucursal->id }}" {{ request('sucursal') == $sucursal->id ? 'selected' : '' }}>
-                {{ $sucursal->nombre }}
-            </option>
-        @endforeach
-    </select>
+    <form action="/" method="GET" class="m-0 p-0 flex items-center justify-end gap-3 w-full sm:w-auto">
+        <select name="sucursal" onchange="this.form.submit()" 
+            class="bg-[#0B0F19] text-white border border-gray-700 rounded px-2 py-1 font-roboto outline-none focus:border-cinecyan cursor-pointer text-sm w-auto max-w-[200px]">
+            <option value="">Todas las sucursales</option>
+            @foreach($sucursales as $sucursal)
+                <option value="{{ $sucursal->id }}" {{ request('sucursal') == $sucursal->id ? 'selected' : '' }}>
+                    {{ $sucursal->nombre }}
+                </option>
+            @endforeach
+        </select>
 
-    <div class="relative group">
-        <input type="text" id="calendario-fechas" name="fecha" placeholder="Ver calendario" 
-            class="bg-[#0B0F19] text-white border border-gray-700 rounded px-3 py-1 pl-8 font-roboto outline-none focus:border-cinecyan cursor-pointer text-sm w-36 hover:bg-gray-800 transition-colors"
-            value="{{ request('fecha') }}" readonly>
-        <i class="bi bi-calendar-event absolute left-2.5 top-1/2 transform -translate-y-1/2 text-cinecyan"></i>
-        
-        @if(request('fecha'))
-            <a href="/?sucursal={{ request('sucursal') }}" class="absolute -right-2 -top-2 bg-red-500 text-white rounded-full w-4 h-4 flex items-center justify-center text-[10px] hover:scale-110 transition-transform shadow-lg" title="Quitar fecha">
-                <i class="bi bi-x font-bold"></i>
-            </a>
-        @endif
-    </div>
-</form>
+        <div class="relative hidden sm:block">
+            <input type="text" id="calendario-fechas" name="fecha" placeholder="Ver calendario" 
+                class="bg-[#0B0F19] text-white border border-gray-700 rounded px-3 py-1 pl-8 font-roboto outline-none focus:border-cinecyan cursor-pointer text-sm w-36 hover:bg-gray-800 transition-colors"
+                value="{{ request('fecha') }}" readonly>
+            <i class="bi bi-calendar-event absolute left-2.5 top-1/2 transform -translate-y-1/2 text-cinecyan"></i>
+            
+            @if(request('fecha'))
+                <a href="/?sucursal={{ request('sucursal') }}" class="absolute -right-2 -top-2 bg-red-500 text-white rounded-full w-4 h-4 flex items-center justify-center text-[10px] hover:scale-110 transition-transform shadow-lg" title="Quitar fecha">
+                    <i class="bi bi-x font-bold"></i>
+                </a>
+            @endif
+        </div>
+    </form>
 
-<a href="/admin" class="flex items-center gap-2 bg-transparent border border-cinecyan text-cinecyan hover:bg-cinecyan hover:text-white px-4 py-2 rounded transition font-roboto ml-4 text-sm">
-    <i class="bi bi-box-arrow-in-right"></i> Ingresar
-</a>
+    <a href="{{ route('login') }}" class="flex items-center justify-center gap-2 bg-transparent border border-cinecyan text-cinecyan hover:bg-cinecyan hover:text-white px-4 py-1.5 rounded transition font-roboto text-sm ml-2">
+        <i class="bi bi-box-arrow-in-right"></i> <span class="hidden sm:inline">Ingresar</span>
+    </a>
+@endsection
 
+@push('styles')
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 <link rel="stylesheet" type="text/css" href="https://npmcdn.com/flatpickr/dist/themes/dark.css">
+@endpush
+
+@push('scripts')
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script src="https://npmcdn.com/flatpickr/dist/l10n/es.js"></script>
 
@@ -81,8 +86,7 @@
         padding-bottom: 5px; 
     }
 </style>
-@endsection
-
+@endpush
 @section('content')
 <section class="container mx-auto px-4 mt-8 mb-12">
     <header class="mb-8 border-b border-gray-800 pb-4">
