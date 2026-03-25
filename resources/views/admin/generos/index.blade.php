@@ -89,5 +89,34 @@
             </table>
         </div>
     </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const buscador = document.getElementById('buscador');
+            const filas = document.querySelectorAll('.fila-genero');
+            const sinResultados = document.getElementById('sinResultados');
+
+            if(buscador) {
+                buscador.addEventListener('input', function() {
+                    const texto = this.value.toLowerCase();
+                    let hayCoincidencias = false;
+
+                    filas.forEach(fila => {
+                        const nombre = fila.querySelector('.nombre-genero').textContent.toLowerCase();
+                        if (nombre.includes(texto)) {
+                            fila.style.display = '';
+                            hayCoincidencias = true;
+                        } else {
+                            fila.style.display = 'none';
+                        }
+                    });
+
+                    if (sinResultados) {
+                        sinResultados.style.display = hayCoincidencias || filas.length === 0 ? 'none' : '';
+                    }
+                });
+            }
+        });
+    </script>
 </body>
 </html>
